@@ -242,7 +242,7 @@ const params = new URLSearchParams(location.search);
 const STORE_ID = params.get('store') || 'store1';
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 
-let cart = {}, products = [], ws, pendingPayment = null, isWaiting = false, paypayUrl = null;
+let cart = {}, products = [], ws, pendingPayment = null, isWaiting = false, paypayUrl = null, lastLogoUrl = undefined;
 
 // QRコードは事前生成PNG画像を使用（generate_qr.js参照）
 
@@ -269,12 +269,20 @@ function updateState(store) {
   document.body.classList.remove(...themes.map(t => 'theme-' + t));
   document.body.classList.add('theme-' + (store.theme || 'orange'));
 
-  // ロゴ
-  const wrap = document.getElementById('logo-wrap');
-  if (store.logo) {
-    wrap.innerHTML = '<img class="logo-img" src="' + store.logo + '" onerror="this.parentNode.innerHTML=\'<div class=logo-placeholder>🎪</div>\'">';
-  } else {
-    wrap.innerHTML = '<div class="logo-placeholder">🎪</div>';
+  // ロゴ（画像URLが変わらない限り再構築しない＝再読み込み防止）
+  if (store.logo !== lastLogoUrl) {
+    lastLogoUrl = store.logo;
+    const wrap = document.getElementById('logo-wrap');
+    if (store.logo) {
+      const img = document.createElement('img');
+      img.className = 'logo-img';
+      img.src = store.logo;
+      img.onerror = () => { wrap.innerHTML = '<div class="logo-placeholder">🎪</div>'; };
+      wrap.innerHTML = '';
+      wrap.appendChild(img);
+    } else {
+      wrap.innerHTML = '<div class="logo-placeholder">🎪</div>';
+    }
   }
 
   products = store.products;
@@ -285,28 +293,107 @@ function updateState(store) {
 }
 
 // ── 商品描画 ──────────────────────────────────────────────────
+// 方針: <img>タグは初回構築時に1回だけ作る。以降は在庫・カート数のテキスト/クラスだけを
+// 差分更新することで、購入操作のたびに画像が再読み込みされる問題を防ぐ。
 const ICONS = ['🍔','🍕','🍜','🍱','🍰','🥤','🍡','🍪','🌮','🍣','🍦','🥞'];
+let productCardEls = {}; // productId -> { card, badge, stockEl }
+let builtProductSignature = null; // 商品リストの構成（id+image+name+price）が変わったかを検知
+
+function productSignature(list) {
+  return list.map(p => p.id + '|' + (p.image||'') + '|' + p.name + '|' + p.price).join('::');
+}
+
 function renderProducts() {
   const area = document.getElementById('products-area');
-  if (!products.length) { area.innerHTML = '<div style="color:#ccc;text-align:center;padding:40px;grid-column:1/-1">商品がありません</div>'; return; }
-  area.innerHTML = products.map((p, i) => {
+
+  if (!products.length) {
+    area.innerHTML = '<div style="color:#ccc;text-align:center;padding:40px;grid-column:1/-1">商品がありません</div>';
+    productCardEls = {}; builtProductSignature = null;
+    return;
+  }
+
+  const sig = productSignature(products);
+
+  // 商品構成（画像・名前・価格・並び順）が変わった場合のみ全体を再構築
+  if (sig !== builtProductSignature) {
+    area.innerHTML = '';
+    productCardEls = {};
+
+    products.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.onclick = () => addToCart(p.id);
+
+      const badge = document.createElement('div');
+      badge.className = 'cart-badge';
+      badge.textContent = '0';
+
+      let imgEl;
+      if (p.image) {
+        imgEl = document.createElement('img');
+        imgEl.className = 'product-img';
+        imgEl.loading = 'lazy';
+        imgEl.src = p.image;
+        imgEl.onerror = () => {
+          const ph = document.createElement('div');
+          ph.className = 'product-img-placeholder';
+          ph.textContent = ICONS[i % ICONS.length];
+          imgEl.replaceWith(ph);
+        };
+      } else {
+        imgEl = document.createElement('div');
+        imgEl.className = 'product-img-placeholder';
+        imgEl.textContent = ICONS[i % ICONS.length];
+      }
+
+      const info = document.createElement('div');
+      info.className = 'product-info';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'product-name';
+      nameEl.textContent = p.name;
+
+      const priceEl = document.createElement('div');
+      priceEl.className = 'product-price';
+      priceEl.innerHTML = '<span>¥</span>' + p.price.toLocaleString();
+
+      const stockEl = document.createElement('div');
+      stockEl.className = 'product-stock';
+
+      info.appendChild(nameEl);
+      info.appendChild(priceEl);
+      info.appendChild(stockEl);
+
+      card.appendChild(badge);
+      card.appendChild(imgEl);
+      card.appendChild(info);
+      area.appendChild(card);
+
+      productCardEls[p.id] = { card, badge, stockEl };
+    });
+
+    builtProductSignature = sig;
+  }
+
+  // 在庫・カート状態の差分更新（画像には触れない）
+  products.forEach(p => {
+    const els = productCardEls[p.id];
+    if (!els) return;
     const inCart = cart[p.id] && cart[p.id].qty > 0;
     const qty = inCart ? cart[p.id].qty : 0;
     const oos = p.stock <= 0;
     const low = p.stock > 0 && p.stock <= 5;
-    const imgHtml = p.image
-      ? '<img class="product-img" src="' + p.image + '" loading="lazy" onerror="this.outerHTML=\'<div class=product-img-placeholder>' + ICONS[i%ICONS.length] + '</div>\'">'
-      : '<div class="product-img-placeholder">' + ICONS[i%ICONS.length] + '</div>';
-    return '<div class="product-card' + (inCart?' in-cart':'') + (oos?' out-of-stock':'') + '"' +
-      (oos ? '' : ' onclick="addToCart(' + p.id + ')"') + '>' +
-      '<div class="cart-badge' + (inCart?' visible':'') + '" id="badge-' + p.id + '">' + qty + '</div>' +
-      imgHtml +
-      '<div class="product-info">' +
-        '<div class="product-name">' + escHtml(p.name) + '</div>' +
-        '<div class="product-price"><span>¥</span>' + p.price.toLocaleString() + '</div>' +
-        '<div class="product-stock' + (low?' low':'') + '">' + (oos?'売切れ':low?'残り'+p.stock+'個':'残'+p.stock+'個') + '</div>' +
-      '</div></div>';
-  }).join('');
+
+    els.card.classList.toggle('in-cart', !!inCart);
+    els.card.classList.toggle('out-of-stock', oos);
+    els.card.onclick = oos ? null : () => addToCart(p.id);
+
+    els.badge.textContent = qty;
+    els.badge.classList.toggle('visible', !!inCart);
+
+    els.stockEl.textContent = oos ? '売切れ' : (low ? '残り' + p.stock + '個' : '残' + p.stock + '個');
+    els.stockEl.classList.toggle('low', low);
+  });
 }
 
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -369,44 +456,26 @@ function selectPayment(method) {
     const fallback = document.getElementById('qr-fallback');
     const warn = document.getElementById('qr-warn');
 
-    // 50円刻みチェック
-    const rounded = Math.round(total / 50) * 50;
-    const isExact = (total % 50 === 0) && total >= 50 && total <= 10000;
-
+    // 金額に関係なく常に同じQR画像を表示（客が金額を手入力して送金する運用）
     img.style.display = 'none';
     fallback.style.display = 'block';
     fallback.textContent = 'QR読み込み中...';
     warn.style.display = 'none';
 
-    if (isExact) {
-      // 事前生成QR画像を使用
-      const qrUrl = '/data/qr/' + total + '.png';
-      img.onload = () => {
-        fallback.style.display = 'none';
-        img.style.display = 'block';
-        warn.style.display = 'none';
-      };
-      img.onerror = () => {
-        // QR画像がない場合（generate_qr.js未実行）
-        fallback.style.display = 'block';
-        fallback.textContent = 'QR未生成\ngenerate_qr.js を\n実行してください';
-        img.style.display = 'none';
-        if (paypayUrl) {
-          warn.style.display = 'block';
-          warn.textContent = '⚠️ QR画像が見つかりません。\ngenerate_qr.js を実行してください。\nPayPay URLへの直接アクセスで代替可能です。';
-        } else {
-          warn.style.display = 'block';
-          warn.textContent = '⚠️ QR画像が見つかりません。\n管理画面でPayPay URLを設定後、\ngenerate_qr.js を実行してください。';
-        }
-      };
-      img.src = qrUrl + '?t=' + Date.now(); // キャッシュ防止
-    } else {
-      // 50円刻み以外（商品設定ミス）
+    const qrUrl = '/data/qr/fixed.png';
+    img.onload = () => {
       fallback.style.display = 'none';
+      img.style.display = 'block';
+      warn.style.display = 'none';
+    };
+    img.onerror = () => {
+      fallback.style.display = 'block';
+      fallback.textContent = 'QR未設定\nQRコード生成.bat を\n実行してください';
       img.style.display = 'none';
       warn.style.display = 'block';
-      warn.textContent = '⚠️ 合計金額（¥' + total + '）が50円刻みではありません。\n店員に声をかけてください。';
-    }
+      warn.textContent = '⚠️ QR画像が見つかりません。\n管理画面でPayPay URLを設定後、\nQRコード生成.bat を実行してください。';
+    };
+    img.src = qrUrl + '?t=' + Date.now(); // キャッシュ防止
 
     showScreen('paypay');
   } else {

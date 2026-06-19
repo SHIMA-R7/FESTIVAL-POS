@@ -50,9 +50,9 @@ function defaultStore(name) {
 }
 
 const MIME = {
-  '.html':'text/html; charset=utf-8', '.js':'text/javascript', '.css':'text/css',
-  '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg',
-  '.gif':'image/gif', '.webp':'image/webp', '.json':'application/json',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif', '.webp': 'image/webp', '.json': 'application/json',
 };
 
 function parseMultipart(buffer, boundary) {
@@ -119,7 +119,7 @@ const server = http.createServer((req, res) => {
         if (p) p.image = imageUrl;
       }
       saveData(); broadcastStoreState(storeId);
-      res.writeHead(200, {'Content-Type':'application/json'});
+      res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ url: imageUrl }));
     });
     return;
@@ -136,7 +136,7 @@ const server = http.createServer((req, res) => {
   if (!filePath.startsWith(__dirname)) { res.writeHead(403); res.end('Forbidden'); return; }
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not Found'); return; }
-    res.writeHead(200, {'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream'});
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream' });
     res.end(data);
   });
 });
@@ -146,11 +146,13 @@ const wss = new WebSocket.Server({ server });
 function storePayload(storeId) {
   const store = stores[storeId];
   if (!store) return null;
-  return { type: 'STORE_STATE', store: {
-    name: store.name, logo: store.logo, products: store.products,
-    totalRevenue: store.totalRevenue, salesCount: store.sales.length, sales: store.sales,
-    pendingPayment: store.pendingPayment, paypayUrl: store.paypayUrl || null, theme: store.theme || "orange",
-  }};
+  return {
+    type: 'STORE_STATE', store: {
+      name: store.name, logo: store.logo, products: store.products,
+      totalRevenue: store.totalRevenue, salesCount: store.sales.length, sales: store.sales,
+      pendingPayment: store.pendingPayment, paypayUrl: store.paypayUrl || null, theme: store.theme || "orange",
+    }
+  };
 }
 
 function broadcastStoreState(storeId) {
