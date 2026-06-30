@@ -82,6 +82,34 @@
   .paypay-form label{font-size:0.82rem;font-weight:700;color:var(--text-muted);}
   .paypay-form .input{flex:none;width:100%;}
 
+  /* 日切替トグル */
+  .day-toggle-wrap{display:flex;align-items:center;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#EEF0FF,#F4F6FA);border-radius:12px;border:2px solid var(--primary);margin-bottom:4px;}
+  .day-label{font-size:1rem;font-weight:700;color:var(--primary);}
+  .day-badge{padding:4px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;}
+  .day-badge.day1{background:#3B4CCA;color:white;}
+  .day-badge.day2{background:#E53E3E;color:white;}
+  .toggle-switch{position:relative;width:64px;height:32px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:32px;cursor:pointer;transition:0.3s;}
+  .toggle-slider:before{content:"";position:absolute;width:26px;height:26px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  input:checked + .toggle-slider{background:var(--red);}
+  input:checked + .toggle-slider:before{transform:translateX(32px);}
+  .day-desc{font-size:0.78rem;color:var(--text-muted);flex:1;}
+
+  /* 日切替ダイアログ */
+  .day-dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:500;display:none;}
+  .day-dialog-overlay.visible{display:flex;}
+  .day-dialog{background:white;border-radius:20px;padding:32px 28px;width:90%;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+  .day-dialog-icon{font-size:3rem;margin-bottom:12px;}
+  .day-dialog h3{font-size:1.2rem;font-weight:700;margin-bottom:10px;}
+  .day-dialog p{font-size:0.88rem;color:var(--text-muted);line-height:1.7;margin-bottom:20px;}
+  .day-dialog-warn{background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:12px;font-size:0.83rem;color:#C53030;margin-bottom:20px;text-align:left;}
+  .day-dialog-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .day-dialog-btns button{padding:12px;border-radius:12px;border:none;font-family:inherit;font-weight:700;font-size:0.95rem;cursor:pointer;}
+  .btn-day-cancel{background:var(--bg);color:var(--text-muted);border:1px solid var(--border)!important;}
+  .btn-day-confirm{background:var(--primary);color:white;}
+  .btn-day-confirm.to-day2{background:var(--red);}
+
   .toast{position:fixed;bottom:20px;right:20px;background:#1A202C;color:white;padding:11px 18px;border-radius:11px;font-size:0.88rem;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.25);}
   .toast.show{transform:none;opacity:1;}
 </style>
@@ -90,6 +118,7 @@
 <header>
   <div class="admin-badge">ADMIN</div>
   <h1>🎪 学校祭POSシステム — 管理画面</h1>
+  <div id="header-day-badge" class="day-badge day1">1日目</div>
 </header>
 
 <div class="container">
@@ -102,6 +131,23 @@
         <input class="input" id="new-store-id" placeholder="出店ID（英数字 例: takoyaki）" maxlength="20">
         <input class="input" id="new-store-name" placeholder="出店名（例: たこ焼き屋）" maxlength="30">
         <button class="btn btn-primary" onclick="createStore()">作成する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日切替 -->
+  <div class="card">
+    <div class="card-header"><h2>📅 開催日の切り替え</h2></div>
+    <div class="card-body">
+      <div class="day-toggle-wrap">
+        <div class="day-label">現在:</div>
+        <div id="current-day-badge" class="day-badge day1">1日目</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="day-toggle-input" onchange="onDayToggleChange(this)">
+          <span class="toggle-slider"></span>
+        </label>
+        <div class="day-badge day2">2日目</div>
+        <div class="day-desc">切り替えると全端末に即座に反映されます。<br>在庫・商品・売上データはそれぞれ独立しています。</div>
       </div>
     </div>
   </div>
@@ -190,6 +236,8 @@
         <select class="input" id="sales-store-select" style="min-width:180px;flex:none;">
           <option value="">出店を選択...</option>
         </select>
+        <button class="btn btn-ghost btn-sm" onclick="setSalesDay(1)" id="sales-day1-btn" style="font-weight:900">1日目</button>
+        <button class="btn btn-ghost btn-sm" onclick="setSalesDay(2)" id="sales-day2-btn">2日目</button>
         <button class="btn btn-primary btn-sm" onclick="loadSales()">読み込む</button>
         <button class="btn btn-danger btn-sm" onclick="resetSales()">🗑️ リセット</button>
       </div>
@@ -199,10 +247,23 @@
 
 </div>
 <div class="toast" id="toast"></div>
+<div class="day-dialog-overlay" id="day-dialog-overlay">
+  <div class="day-dialog">
+    <div class="day-dialog-icon" id="day-dialog-icon">📅</div>
+    <h3 id="day-dialog-title">開催日を切り替えますか？</h3>
+    <p id="day-dialog-desc"></p>
+    <div class="day-dialog-warn" id="day-dialog-warn"></div>
+    <div class="day-dialog-btns">
+      <button class="btn-day-cancel" onclick="closeDayDialog()">キャンセル</button>
+      <button id="btn-day-confirm" class="btn-day-confirm" onclick="executeDaySwitch()">切り替える</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 let ws, storeList = [], editingProducts = [], currentProductStoreId = null, logoStoreId = null;
+let currentDay = 1, pendingDay = null;
 
 // ── WebSocket ──────────────────────────────────────────────────
 function connect() {
@@ -212,9 +273,11 @@ function connect() {
     const msg = JSON.parse(e.data);
     // STORE_LISTだけでセレクトを更新（選択中の値を保持）
     if (msg.type === 'STORE_LIST') { storeList = msg.stores; renderStoreList(); updateSelects(); }
+    if (msg.type === 'DAY_STATE') { currentDay = msg.currentDay; updateDayUI(); }
+    if (msg.type === 'REGISTERED') { if (msg.currentDay) { currentDay = msg.currentDay; updateDayUI(); } }
     if (msg.type === 'STORE_STATE') onStoreState(msg.store);
     if (msg.type === 'STORE_CREATED') toast('✅ 出店を作成しました');
-    if (msg.type === 'SALES_DATA') renderSales(msg.sales, msg.totalRevenue);
+    if (msg.type === 'SALES_DATA') renderSales(msg.sales, msg.totalRevenue, msg.currentDay);
     if (msg.type === 'ERROR') alert('エラー: ' + msg.message);
   };
   ws.onclose = () => setTimeout(connect, 2000);
@@ -235,6 +298,50 @@ function onStoreState(store) {
 
 function waitForStoreState() {
   return new Promise(resolve => { pendingStoreStateResolve = resolve; });
+}
+
+// ── 日切替 ─────────────────────────────────────────────────────
+function updateDayUI() {
+  const isDay2 = currentDay === 2;
+  document.getElementById('day-toggle-input').checked = isDay2;
+  document.getElementById('current-day-badge').textContent = isDay2 ? '2日目' : '1日目';
+  document.getElementById('current-day-badge').className = 'day-badge ' + (isDay2 ? 'day2' : 'day1');
+  document.getElementById('header-day-badge').textContent = isDay2 ? '2日目' : '1日目';
+  document.getElementById('header-day-badge').className = 'day-badge ' + (isDay2 ? 'day2' : 'day1');
+}
+
+function onDayToggleChange(input) {
+  // 即座に元に戻す（確認後に切替）
+  input.checked = currentDay === 2;
+  const toDay = currentDay === 1 ? 2 : 1;
+  pendingDay = toDay;
+  const fromLabel = currentDay + '日目';
+  const toLabel = toDay + '日目';
+  document.getElementById('day-dialog-icon').textContent = toDay === 2 ? '📅' : '🔙';
+  document.getElementById('day-dialog-title').textContent = fromLabel + ' → ' + toLabel + ' に切り替えますか？';
+  document.getElementById('day-dialog-desc').textContent =
+    '切り替えると、すべての出店・端末の表示が' + toLabel + 'の内容に変わります。' +
+    '在庫・商品ラインナップ・売上データはそれぞれ独立しています。';
+  document.getElementById('day-dialog-warn').innerHTML =
+    '<strong>⚠️ 注意：</strong> 切り替え中の取引は中断されます。<br>' +
+    '売上データは日ごとに保存されるため、' + fromLabel + 'のデータは失われません。<br>' +
+    '双方向に切り替え可能です（テストも可能）。';
+  const confirmBtn = document.getElementById('btn-day-confirm');
+  confirmBtn.textContent = toLabel + ' に切り替える';
+  confirmBtn.className = 'btn-day-confirm' + (toDay === 2 ? ' to-day2' : '');
+  document.getElementById('day-dialog-overlay').classList.add('visible');
+}
+
+function closeDayDialog() {
+  document.getElementById('day-dialog-overlay').classList.remove('visible');
+  pendingDay = null;
+}
+
+function executeDaySwitch() {
+  if (!pendingDay) return;
+  ws.send(JSON.stringify({ type: 'SET_DAY', day: pendingDay }));
+  closeDayDialog();
+  toast('📅 ' + pendingDay + '日目に切り替えました');
 }
 
 // ── 出店一覧 ──────────────────────────────────────────────────
@@ -438,35 +545,53 @@ async function loadProductEditor() {
   renderProductEditor();
 }
 
+let editingDay = 1; // 商品エディタで編集中の日
+
 function renderProductEditor() {
   if (!currentProductStoreId) return;
-  document.getElementById('product-editor').innerHTML = `
-    <table class="product-editor-table">
-      <thead><tr><th>画像</th><th>商品名</th><th>価格(¥)</th><th>在庫数</th><th></th></tr></thead>
-      <tbody id="product-tbody"></tbody>
-    </table>`;
+  const d1 = editingDay === 1;
+  document.getElementById('product-editor').innerHTML =
+    '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+      '<button class="btn btn-sm ' + (d1 ? 'btn-primary' : 'btn-ghost') + '" onclick="switchEditDay(1)">📅 1日目</button>' +
+      '<button class="btn btn-sm ' + (!d1 ? 'btn-danger' : 'btn-ghost') + '" onclick="switchEditDay(2)">📅 2日目</button>' +
+      '<span style="font-size:0.78rem;color:var(--text-muted);align-self:center;margin-left:6px;">表示チェックを外すとその日は非表示になります</span>' +
+    '</div>' +
+    '<table class="product-editor-table">' +
+      '<thead><tr><th>画像</th><th>商品名</th><th>価格(¥)</th><th>在庫数</th><th>表示</th><th></th></tr></thead>' +
+      '<tbody id="product-tbody"></tbody>' +
+    '</table>';
   renderProductRows();
+}
+
+function switchEditDay(day) {
+  editingDay = day;
+  renderProductEditor();
 }
 
 function renderProductRows() {
   const tbody = document.getElementById('product-tbody');
   if (!tbody || !currentProductStoreId) return;
-  const sid = currentProductStoreId;
-  tbody.innerHTML = editingProducts.map((p, i) => {
+  const d = editingDay;
+  tbody.innerHTML = editingProducts.map(function(p, i) {
     const imgHtml = p.image
-      ? `<img class="product-thumb" src="${p.image}?${Date.now()}">`
-      : `<div class="product-thumb-placeholder">📦</div>`;
-    return `<tr>
-      <td><div class="img-upload-cell">
-        ${imgHtml}
-        <input type="file" id="pimg-${p.id}" accept="image/*" onchange="uploadProductImage(this,${p.id})">
-        <button class="img-upload-btn" onclick="document.getElementById('pimg-${p.id}').click()">画像変更</button>
-      </div></td>
-      <td><input type="text" value="${escHtml(p.name)}" oninput="editingProducts[${i}].name=this.value"></td>
-      <td><input type="number" value="${p.price}" min="0" oninput="editingProducts[${i}].price=+this.value" style="width:80px"></td>
-      <td><input type="number" value="${p.stock}" min="0" oninput="editingProducts[${i}].stock=+this.value" style="width:70px"></td>
-      <td><button class="btn btn-danger btn-sm" onclick="removeProduct(${i})">削除</button></td>
-    </tr>`;
+      ? '<img class="product-thumb" src="' + p.image + '?' + Date.now() + '">'
+      : '<div class="product-thumb-placeholder">📦</div>';
+    const stock = d === 1 ? (p.stock1 !== undefined ? p.stock1 : 0) : (p.stock2 !== undefined ? p.stock2 : 0);
+    const active = d === 1 ? (p.active1 !== false) : (p.active2 !== false);
+    const stockField = d === 1 ? 'stock1' : 'stock2';
+    const activeField = d === 1 ? 'active1' : 'active2';
+    return '<tr style="' + (!active ? 'opacity:0.5;' : '') + '">' +
+      '<td><div class="img-upload-cell">' +
+        imgHtml +
+        '<input type="file" id="pimg-' + p.id + '" accept="image/*" onchange="uploadProductImage(this,' + p.id + ')">' +
+        '<button class="img-upload-btn" onclick="document.getElementById(\'pimg-' + p.id + '\').click()">画像変更</button>' +
+      '</div></td>' +
+      '<td><input type="text" value="' + escHtml(p.name) + '" oninput="editingProducts[' + i + '].name=this.value"></td>' +
+      '<td><input type="number" value="' + p.price + '" min="0" oninput="editingProducts[' + i + '].price=+this.value" style="width:80px"></td>' +
+      '<td><input type="number" value="' + stock + '" min="0" oninput="editingProducts[' + i + '].' + stockField + '=+this.value" style="width:70px"></td>' +
+      '<td style="text-align:center;"><input type="checkbox" ' + (active ? 'checked' : '') + ' onchange="editingProducts[' + i + '].' + activeField + '=this.checked;renderProductRows()" style="width:18px;height:18px;cursor:pointer;"></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="removeProduct(' + i + ')">削除</button></td>' +
+    '</tr>';
   }).join('');
 }
 
@@ -477,7 +602,7 @@ function removeProduct(idx) { editingProducts.splice(idx,1); renderProductRows()
 function addProduct() {
   if (!currentProductStoreId) { alert('まず出店を選択・読み込みしてください'); return; }
   const maxId = editingProducts.reduce((m,p) => Math.max(m,p.id), 0);
-  editingProducts.push({ id:maxId+1, name:'新商品', price:100, stock:50, image:null });
+  editingProducts.push({ id:maxId+1, name:'新商品', price:100, stock1:50, stock2:50, active1:true, active2:true, image:null });
   renderProductRows();
 }
 
@@ -513,17 +638,30 @@ function savePaypayUrl() {
 }
 
 // ── 売上 ──────────────────────────────────────────────────────
+let viewingSalesDay = 1;
+function setSalesDay(day) {
+  viewingSalesDay = day;
+  document.getElementById('sales-day1-btn').style.fontWeight = day === 1 ? '900' : '';
+  document.getElementById('sales-day2-btn').style.fontWeight = day === 2 ? '900' : '';
+  loadSales();
+}
+
 function loadSales() {
   const storeId = document.getElementById('sales-store-select').value;
   if (!storeId) { alert('出店を選択してください'); return; }
-  ws.send(JSON.stringify({ type:'GET_SALES', storeId }));
+  ws.send(JSON.stringify({ type:'GET_SALES', storeId, day: viewingSalesDay }));
 }
 
-function renderSales(sales, totalRevenue) {
+function renderSales(sales, totalRevenue, day) {
   const panel = document.getElementById('sales-panel');
   const cashRev = sales.filter(s=>s.method==='cash').reduce((s,x)=>s+x.total,0);
-  panel.innerHTML = `
-    <div class="summary-grid">
+  const dayLabel = (day || viewingSalesDay) === 2 ? '2日目' : '1日目';
+  panel.innerHTML =
+    '<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;">' +
+      '<span class="day-badge ' + ((day||viewingSalesDay)===2?'day2':'day1') + '">' + dayLabel + '</span>' +
+      '<span style="font-size:0.78rem;color:var(--text-muted);">の売上データ</span>' +
+    '</div>' +
+    `<div class="summary-grid">
       <div class="summary-card"><span class="s-label">売上合計</span><div class="s-value">¥${totalRevenue.toLocaleString()}</div></div>
       <div class="summary-card"><span class="s-label">件数</span><div class="s-value">${sales.length}件</div></div>
       <div class="summary-card"><span class="s-label">現金</span><div class="s-value">¥${cashRev.toLocaleString()}</div></div>

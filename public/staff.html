@@ -2,7 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>店員画面</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap');
@@ -12,23 +16,23 @@
     --border:#2A2A4A; --radius:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Noto Sans JP',sans-serif;color:var(--text);}
+  html,body{height:100%;height:100dvh;overflow:hidden;background:var(--bg);font-family:'Noto Sans JP',sans-serif;color:var(--text);}
 
   header{background:var(--surface);padding:14px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0;}
   .staff-badge{background:var(--primary);color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;}
   header h1{font-size:1.1rem;font-weight:700;flex:1;}
   .time-display{font-family:'Oswald',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:0.05em;}
 
-  .main{display:flex;height:calc(100vh - 58px);overflow:hidden;}
+  .main{display:flex;height:calc(100vh - 58px);height:calc(100dvh - 58px);overflow:hidden;}
 
   /* ── 左パネル ── */
-  .status-panel{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 14px;gap:14px;flex-shrink:0;}
+  .status-panel{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 14px;gap:14px;flex-shrink:0;overflow:hidden;}
   .stat-card{background:var(--bg);border-radius:var(--radius);padding:14px;border:1px solid var(--border);text-align:center;}
   .stat-label{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
   .stat-value{font-family:'Oswald',sans-serif;font-size:2rem;color:var(--accent);}
   .stat-unit{font-size:0.82rem;color:var(--text-muted);}
   .stat-card.green .stat-value{color:var(--green);}
-  .stock-section{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
+  .stock-section{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:60px;}
   .stock-section h3{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;flex-shrink:0;}
   .stock-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:7px;}
   .stock-item{background:var(--bg);border-radius:10px;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
@@ -40,6 +44,7 @@
   /* ── モード切替ボタン ── */
   .mode-btn{
     margin-top:auto;
+    flex-shrink:0;
     background:var(--bg);border:2px solid var(--border);border-radius:12px;
     padding:10px 12px;cursor:pointer;font-family:inherit;font-size:0.8rem;font-weight:700;
     color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:8px;
@@ -54,7 +59,7 @@
   .right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
 
   /* ── 決済待ちエリア ── */
-  .pending-area{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:200px;border-bottom:1px solid var(--border);}
+  .pending-area{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:160px;max-height:45vh;border-bottom:1px solid var(--border);overflow-y:auto;}
   .pending-idle{display:flex;flex-direction:column;align-items:center;gap:10px;}
   .idle-icon{font-size:3rem;opacity:0.3;}
   .pending-idle p{color:var(--text-muted);font-size:0.95rem;}
@@ -86,13 +91,13 @@
   .log-header{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
   .log-header h3{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);flex:1;}
   .log-count{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2px 10px;font-size:0.72rem;color:var(--text-muted);}
-  .log-body{flex:1;overflow-y:auto;padding:0;}
+  .log-body{flex:1;overflow-y:auto;padding:0;padding-bottom:132px;}
 
   /* ── 表形式ログ ── */
   .log-table{width:100%;border-collapse:collapse;table-layout:fixed;}
 
   /* ヘッダー行 */
-  .log-table thead tr{position:sticky;top:0;z-index:2;}
+  .log-table thead th{position:sticky;top:0;z-index:2;}
   .log-table th{
     background:#0D1A30;color:var(--text-muted);
     font-size:0.7rem;font-weight:700;letter-spacing:0.06em;
@@ -199,6 +204,10 @@
   .spinner{width:46px;height:46px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.9s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
   #connecting p{color:var(--text-muted);font-size:0.92rem;}
+
+  .day-badge-hdr{padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;flex-shrink:0;}
+  .day-badge-hdr.day1{background:#3B4CCA;color:white;}
+  .day-badge-hdr.day2{background:#E53E3E;color:white;}
   ::-webkit-scrollbar{width:4px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
@@ -211,6 +220,7 @@
 <header>
   <div class="staff-badge">STAFF</div>
   <h1 id="store-name">読み込み中...</h1>
+  <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
   <div class="time-display" id="time">--:--</div>
 </header>
 
@@ -302,13 +312,21 @@ setInterval(() => {
 }, 1000);
 
 // ── WebSocket ──────────────────────────────────────────────────
+function updateDayBadge(day) {
+  const el = document.getElementById('day-badge-hdr');
+  if (!el) return;
+  el.textContent = day === 2 ? '2日目' : '1日目';
+  el.className = 'day-badge-hdr ' + (day === 2 ? 'day2' : 'day1');
+}
+
 function connect() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => ws.send(JSON.stringify({ type:'REGISTER', role:'staff', storeId:STORE_ID }));
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    if (msg.type === 'REGISTERED') document.getElementById('connecting').style.display = 'none';
+    if (msg.type === 'REGISTERED') { document.getElementById('connecting').style.display = 'none'; if (msg.currentDay) updateDayBadge(msg.currentDay); }
     if (msg.type === 'STORE_STATE') updateState(msg.store);
+    if (msg.type === 'DAY_STATE') { updateDayBadge(msg.currentDay); }
     if (msg.type === 'ERROR') alert('エラー: ' + msg.message);
   };
   ws.onclose = () => {
@@ -319,6 +337,7 @@ function connect() {
 
 // ── 状態更新 ──────────────────────────────────────────────────
 function updateState(store) {
+  if (store.currentDay) updateDayBadge(store.currentDay);
   document.getElementById('store-name').textContent = '🎪 ' + store.name;
   document.getElementById('revenue').textContent = store.totalRevenue.toLocaleString();
   document.getElementById('sales-count').textContent = store.salesCount;

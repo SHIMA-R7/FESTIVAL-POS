@@ -166,6 +166,10 @@
   .spinner{width:44px;height:44px;border:5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.9s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
   #connecting p{font-size:0.92rem;color:var(--text-muted);font-weight:700;}
+
+  .day-badge-hdr{padding:3px 10px;border-radius:16px;font-size:0.72rem;font-weight:700;flex-shrink:0;}
+  .day-badge-hdr.day1{background:rgba(255,255,255,0.25);color:white;}
+  .day-badge-hdr.day2{background:#E53E3E;color:white;}
   ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
   /* ═══════════════════════════════════════
      📱 スマホ対応（幅767px以下）
@@ -233,6 +237,7 @@
 
 <header>
   <div class="logo-wrap" id="logo-wrap"><div class="logo-placeholder">🎪</div></div>
+  <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
   <h1 id="store-name">読み込み中...</h1>
   <div class="store-badge" id="store-badge">--</div>
 </header>
@@ -306,13 +311,21 @@ let cart = {}, products = [], ws, pendingPayment = null, isWaiting = false, payp
 // QRコードは事前生成PNG画像を使用（generate_qr.js参照）
 
 // ── WebSocket ─────────────────────────────────────────────────
+function updateDayBadge(day) {
+  const el = document.getElementById('day-badge-hdr');
+  if (!el) return;
+  el.textContent = day === 2 ? '2日目' : '1日目';
+  el.className = 'day-badge-hdr ' + (day === 2 ? 'day2' : 'day1');
+}
+
 function connect() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => ws.send(JSON.stringify({ type:'REGISTER', role:'customer', storeId:STORE_ID }));
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    if (msg.type === 'REGISTERED') document.getElementById('connecting').style.display = 'none';
+    if (msg.type === 'REGISTERED') { document.getElementById('connecting').style.display = 'none'; if (msg.currentDay) updateDayBadge(msg.currentDay); }
     if (msg.type === 'STORE_STATE') updateState(msg.store);
+    if (msg.type === 'DAY_STATE') { updateDayBadge(msg.currentDay); }
     if (msg.type === 'ERROR') alert('エラー: ' + msg.message);
   };
   ws.onclose = () => { document.getElementById('connecting').style.display = 'flex'; setTimeout(connect, 2000); };

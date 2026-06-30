@@ -62,7 +62,7 @@
   /* ── 表形式ログ ── */
   .log-table{width:100%;border-collapse:collapse;table-layout:fixed;}
 
-  .log-table thead tr{position:sticky;top:0;z-index:2;}
+  .log-table thead th{position:sticky;top:0;z-index:2;}
   .log-table th{
     background:#0D1A30;color:var(--text-muted);
     font-size:0.7rem;font-weight:700;letter-spacing:0.06em;
@@ -138,6 +138,10 @@
   .spinner{width:46px;height:46px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.9s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg)}}
   #connecting p{color:var(--text-muted);font-size:0.92rem;}
+
+  .day-badge-hdr{padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;flex-shrink:0;}
+  .day-badge-hdr.day1{background:#3B4CCA;color:white;}
+  .day-badge-hdr.day2{background:#E53E3E;color:white;}
   ::-webkit-scrollbar{width:4px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
@@ -150,6 +154,7 @@
 <header>
   <div class="by-badge">BACKYARD</div>
   <h1 id="store-name">読み込み中...</h1>
+  <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
   <div class="time-display" id="time">--:--</div>
 </header>
 
@@ -211,13 +216,21 @@ setInterval(() => {
 }, 1000);
 
 // ── WebSocket ──────────────────────────────────────────────────
+function updateDayBadge(day) {
+  const el = document.getElementById('day-badge-hdr');
+  if (!el) return;
+  el.textContent = day === 2 ? '2日目' : '1日目';
+  el.className = 'day-badge-hdr ' + (day === 2 ? 'day2' : 'day1');
+}
+
 function connect() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => ws.send(JSON.stringify({ type:'REGISTER', role:'backyard', storeId:STORE_ID }));
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    if (msg.type === 'REGISTERED') document.getElementById('connecting').style.display = 'none';
+    if (msg.type === 'REGISTERED') { document.getElementById('connecting').style.display = 'none'; if (msg.currentDay) updateDayBadge(msg.currentDay); }
     if (msg.type === 'STORE_STATE') updateState(msg.store);
+    if (msg.type === 'DAY_STATE') { updateDayBadge(msg.currentDay); }
     if (msg.type === 'STORE_DELETED') location.reload();
   };
   ws.onclose = () => {
@@ -228,6 +241,7 @@ function connect() {
 
 // ── 状態更新 ──────────────────────────────────────────────────
 function updateState(store) {
+  if (store.currentDay) updateDayBadge(store.currentDay);
   document.getElementById('store-name').textContent = '🍳 ' + store.name;
   document.getElementById('revenue').textContent = store.totalRevenue.toLocaleString();
   document.getElementById('sales-count').textContent = store.salesCount;

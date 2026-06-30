@@ -14,19 +14,43 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 if (!fs.existsSync(QR_DIR)) fs.mkdirSync(QR_DIR);
 
 let stores = {};
+let currentDay = 1; // 1 or 2
 
 function loadData() {
   try {
     if (fs.existsSync(DATA_FILE)) {
-      stores = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-      for (const id of Object.keys(stores)) stores[id].pendingPayment = null;
-      console.log('💾 データ復元: ' + Object.keys(stores).length + '件の出店');
+      const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      currentDay = raw.__currentDay || 1;
+      delete raw.__currentDay;
+      stores = raw;
+      for (const id of Object.keys(stores)) {
+        stores[id].pendingPayment = null;
+        // 旧形式(stock)→新形式(stock1/stock2)の移行
+        stores[id].products = (stores[id].products || []).map(p => ({
+          ...p,
+          stock1: p.stock1 !== undefined ? p.stock1 : (p.stock || 0),
+          stock2: p.stock2 !== undefined ? p.stock2 : (p.stock || 0),
+          active1: p.active1 !== undefined ? p.active1 : true,
+          active2: p.active2 !== undefined ? p.active2 : true,
+        }));
+        // 旧形式sales→sales1の移行
+        if (stores[id].sales && !stores[id].sales1) {
+          stores[id].sales1 = stores[id].sales || [];
+          stores[id].totalRevenue1 = stores[id].totalRevenue || 0;
+        }
+        if (!stores[id].sales2) { stores[id].sales2 = []; stores[id].totalRevenue2 = 0; }
+        delete stores[id].sales; delete stores[id].totalRevenue;
+      }
+      console.log('💾 データ復元: ' + Object.keys(stores).length + '件の出店, ' + currentDay + '日目');
     }
   } catch (e) { console.error('データ読み込みエラー:', e.message); stores = {}; }
 }
 
 function saveData() {
-  try { fs.writeFileSync(DATA_FILE, JSON.stringify(stores, null, 2), 'utf8'); }
+  try {
+    const data = Object.assign({ __currentDay: currentDay }, stores);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  }
   catch (e) { console.error('データ保存エラー:', e.message); }
 }
 
@@ -40,12 +64,12 @@ function defaultStore(name) {
   return {
     name, logo: null,
     products: [
-      { id: 1, name: '商品A', price: 200, stock: 50, image: null },
-      { id: 2, name: '商品B', price: 300, stock: 30, image: null },
-      { id: 3, name: '商品C', price: 150, stock: 100, image: null },
-      { id: 4, name: '商品D', price: 500, stock: 20, image: null },
+      { id: 1, name: '商品A', price: 200, stock1: 50, stock2: 50, active1: true, active2: true, image: null },
+      { id: 2, name: '商品B', price: 300, stock1: 30, stock2: 30, active1: true, active2: true, image: null },
+      { id: 3, name: '商品C', price: 150, stock1:100, stock2:100, active1: true, active2: true, image: null },
+      { id: 4, name: '商品D', price: 500, stock1: 20, stock2: 20, active1: true, active2: true, image: null },
     ],
-    sales: [], totalRevenue: 0, pendingPayment: null,
+    sales1: [], sales2: [], totalRevenue1: 0, totalRevenue2: 0, pendingPayment: null,
   };
 }
 
@@ -137,7 +161,13 @@ const server = http.createServer((req, res) => {
   if (!filePath.startsWith(__dirname)) { res.writeHead(403); res.end('Forbidden'); return; }
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not Found'); return; }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream' });
+    const ext = path.extname(filePath);
+    const headers = { 'Content-Type': MIME[ext] || 'application/octet-stream' };
+    if (ext === '.html') {
+      headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      headers['Pragma'] = 'no-cache';
+    }
+    res.writeHead(200, headers);
     res.end(data);
   });
 });
@@ -147,12 +177,24 @@ const wss = new WebSocket.Server({ server });
 function storePayload(storeId) {
   const store = stores[storeId];
   if (!store) return null;
+  const day = currentDay;
+  // 現在の日に応じた商品リスト（activeフラグでフィルタ、stockを現在日のものに）
+  const products = store.products
+    .filter(p => day === 1 ? p.active1 !== false : p.active2 !== false)
+    .map(p => ({
+      id: p.id, name: p.name, price: p.price, image: p.image,
+      stock: day === 1 ? (p.stock1 || 0) : (p.stock2 || 0),
+      // 管理画面用に両日の情報も渡す
+      stock1: p.stock1, stock2: p.stock2, active1: p.active1, active2: p.active2,
+    }));
+  const sales    = day === 1 ? (store.sales1 || [])         : (store.sales2 || []);
+  const revenue  = day === 1 ? (store.totalRevenue1 || 0)   : (store.totalRevenue2 || 0);
   return {
     type: 'STORE_STATE', store: {
-      name: store.name, logo: store.logo, products: store.products,
-      totalRevenue: store.totalRevenue, salesCount: store.sales.length, sales: store.sales,
+      name: store.name, logo: store.logo, products,
+      totalRevenue: revenue, salesCount: sales.length, sales,
       pendingPayment: store.pendingPayment, paypayUrl: store.paypayUrl || null, theme: store.theme || "orange",
-      numberMode: store.numberMode || false,
+      numberMode: store.numberMode || false, currentDay: day,
     }
   };
 }
@@ -167,6 +209,12 @@ function broadcastStoreState(storeId) {
       if (c && c.storeId === storeId) ws.send(msg);
     }
   });
+}
+
+function broadcastDayState() {
+  broadcastAll({ type: 'DAY_STATE', currentDay });
+  // 全出店の状態を再送
+  Object.keys(stores).forEach(id => broadcastStoreState(id));
 }
 
 function broadcastAll(message) {
@@ -186,7 +234,7 @@ wss.on('connection', (ws) => {
           ws.send(JSON.stringify({ type: 'ERROR', message: '出店が存在しません' })); return;
         }
         clients.set(ws, { type: role, storeId: storeId || null });
-        ws.send(JSON.stringify({ type: 'REGISTERED', role, storeId }));
+        ws.send(JSON.stringify({ type: 'REGISTERED', role, storeId, currentDay }));
         if (storeId && stores[storeId]) ws.send(JSON.stringify(storePayload(storeId)));
         if (role === 'admin' || role === 'admin_product')
           ws.send(JSON.stringify({ type: 'STORE_LIST', stores: Object.keys(stores).map(id => ({ id, name: stores[id].name, theme: stores[id].theme || 'orange' })) }));
@@ -202,7 +250,14 @@ wss.on('connection', (ws) => {
       }
       case 'UPDATE_PRODUCTS': {
         if (!stores[storeId]) return;
-        stores[storeId].products = msg.products;
+        // 既存商品にstock1/stock2がない場合は移行
+        stores[storeId].products = msg.products.map(p => ({
+          id: p.id, name: p.name, price: p.price, image: p.image || null,
+          stock1: p.stock1 !== undefined ? p.stock1 : (p.stock || 0),
+          stock2: p.stock2 !== undefined ? p.stock2 : (p.stock || 0),
+          active1: p.active1 !== undefined ? p.active1 : true,
+          active2: p.active2 !== undefined ? p.active2 : true,
+        }));
         saveAndBroadcast(storeId); break;
       }
       case 'UPDATE_PAYPAY_URL': {
@@ -221,7 +276,8 @@ wss.on('connection', (ws) => {
         const total = items.reduce((s, i) => s + i.price * i.qty, 0);
         for (const item of items) {
           const p = store.products.find(p => p.id === item.id);
-          if (!p || p.stock < item.qty) { ws.send(JSON.stringify({ type: 'ERROR', message: item.name + 'の在庫が不足しています' })); return; }
+          const stock = p ? (currentDay === 1 ? (p.stock1||0) : (p.stock2||0)) : 0;
+          if (!p || stock < item.qty) { ws.send(JSON.stringify({ type: 'ERROR', message: item.name + 'の在庫が不足しています' })); return; }
         }
         store.pendingPayment = { items, total, method: msg.method };
         saveAndBroadcast(storeId); break;
@@ -229,9 +285,23 @@ wss.on('connection', (ws) => {
       case 'CONFIRM_PAYMENT': {
         const store = stores[storeId]; if (!store || !store.pendingPayment) return;
         const { items, total, method } = store.pendingPayment;
-        for (const item of items) { const p = store.products.find(p => p.id === item.id); if (p) p.stock = Math.max(0, p.stock - item.qty); }
-        store.sales.push({ items, total, method, time: new Date().toISOString(), delivered: false });
-        store.totalRevenue += total; store.pendingPayment = null;
+        for (const item of items) {
+          const p = store.products.find(p => p.id === item.id);
+          if (p) {
+            if (currentDay === 1) p.stock1 = Math.max(0, (p.stock1||0) - item.qty);
+            else                  p.stock2 = Math.max(0, (p.stock2||0) - item.qty);
+          }
+        }
+        if (currentDay === 1) {
+          if (!store.sales1) store.sales1 = [];
+          store.sales1.push({ items, total, method, time: new Date().toISOString(), delivered: false });
+          store.totalRevenue1 = (store.totalRevenue1||0) + total;
+        } else {
+          if (!store.sales2) store.sales2 = [];
+          store.sales2.push({ items, total, method, time: new Date().toISOString(), delivered: false });
+          store.totalRevenue2 = (store.totalRevenue2||0) + total;
+        }
+        store.pendingPayment = null;
         saveAndBroadcast(storeId); break;
       }
       case 'CANCEL_PAYMENT': {
@@ -240,27 +310,34 @@ wss.on('connection', (ws) => {
       }
       case 'RESET_SALES': {
         const store = stores[storeId]; if (!store) return;
-        store.sales = []; store.totalRevenue = 0; store.pendingPayment = null;
+        if (currentDay === 1) { store.sales1 = []; store.totalRevenue1 = 0; }
+        else                  { store.sales2 = []; store.totalRevenue2 = 0; }
+        store.pendingPayment = null;
         saveAndBroadcast(storeId); break;
       }
       case 'GET_SALES': {
         const store = stores[storeId]; if (!store) return;
-        ws.send(JSON.stringify({ type: 'SALES_DATA', sales: store.sales, totalRevenue: store.totalRevenue })); break;
+        // adminから日指定がある場合はその日を、なければcurrentDayを使う
+        const reqDay = (msg.day === 1 || msg.day === 2) ? msg.day : currentDay;
+        const sales   = reqDay === 1 ? (store.sales1||[])       : (store.sales2||[]);
+        const revenue = reqDay === 1 ? (store.totalRevenue1||0) : (store.totalRevenue2||0);
+        ws.send(JSON.stringify({ type: 'SALES_DATA', sales, totalRevenue: revenue, currentDay: reqDay })); break;
       }
       case 'REVERT_SALE': {
-        // 取引index番号で1件取り消し
         const store = stores[storeId]; if (!store) return;
         const idx = msg.saleIndex;
-        if (idx < 0 || idx >= store.sales.length) return;
-        const sale = store.sales[idx];
-        // 在庫を戻す
+        const sales = currentDay === 1 ? store.sales1 : store.sales2;
+        if (!sales || idx < 0 || idx >= sales.length) return;
+        const sale = sales[idx];
         for (const item of sale.items) {
           const p = store.products.find(p => p.id === item.id);
-          if (p) p.stock += item.qty;
+          if (p) {
+            if (currentDay === 1) p.stock1 = (p.stock1||0) + item.qty;
+            else                  p.stock2 = (p.stock2||0) + item.qty;
+          }
         }
-        // 売上を戻す
-        store.totalRevenue -= sale.total;
-        store.sales.splice(idx, 1);
+        if (currentDay === 1) { store.totalRevenue1 = (store.totalRevenue1||0) - sale.total; store.sales1.splice(idx, 1); }
+        else                  { store.totalRevenue2 = (store.totalRevenue2||0) - sale.total; store.sales2.splice(idx, 1); }
         saveAndBroadcast(storeId); break;
       }
       case 'RENAME_STORE': {
@@ -286,9 +363,17 @@ wss.on('connection', (ws) => {
       case 'TOGGLE_DELIVERED': {
         const store = stores[storeId]; if (!store) return;
         const idx = msg.saleIndex;
-        if (idx < 0 || idx >= store.sales.length) return;
-        store.sales[idx].delivered = !store.sales[idx].delivered;
+        const sales = currentDay === 1 ? store.sales1 : store.sales2;
+        if (!sales || idx < 0 || idx >= sales.length) return;
+        sales[idx].delivered = !sales[idx].delivered;
         saveAndBroadcast(storeId); break;
+      }
+      case 'SET_DAY': {
+        const newDay = msg.day === 2 ? 2 : 1;
+        currentDay = newDay;
+        saveData();
+        broadcastDayState();
+        break;
       }
       case 'SET_NUMBER_MODE': {
         if (!stores[storeId]) return;
