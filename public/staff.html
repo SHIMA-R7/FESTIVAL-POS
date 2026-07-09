@@ -262,8 +262,8 @@
       <div class="stat-value">¥<span id="revenue">0</span></div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">取引件数</div>
-      <div class="stat-value"><span id="sales-count">0</span><span class="stat-unit"> 件</span></div>
+      <div class="stat-label">累計販売数</div>
+      <div class="stat-value"><span id="sales-count">0</span><span class="stat-unit"> 個</span></div>
     </div>
     <div class="stock-section">
       <h3>在庫状況</h3>
@@ -394,7 +394,8 @@ function updateState(store) {
   if (store.currentDay) updateDayBadge(store.currentDay);
   document.getElementById('store-name').textContent = '🎪 ' + store.name;
   document.getElementById('revenue').textContent = store.totalRevenue.toLocaleString();
-  document.getElementById('sales-count').textContent = store.salesCount;
+  const totalItems = (store.sales || []).reduce(function(sum, s) { return sum + (s.items || []).reduce(function(s2, i) { return s2 + i.qty; }, 0); }, 0);
+  document.getElementById('sales-count').textContent = totalItems;
 
   // numberModeをサーバー側の値に同期
   numberMode = !!store.numberMode;
