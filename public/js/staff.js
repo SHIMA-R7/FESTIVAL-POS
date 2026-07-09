@@ -225,7 +225,7 @@ function renderLog() {
         ticketHeader,
         '<th class="col-fixed col-time">時刻</th>',
         '<th class="col-method">支払</th>',
-        ...productNames.map(name => `<th title="${esc(name)}">${esc(name.length > 6 ? name.slice(0, 5) + '…' : name)}</th>`),
+        ...productNames.map(name => `<th title="${esc(name)}">${esc(name)}</th>`),
         '<th class="col-total">合計</th>',
         '<th class="col-revert"></th>',
     ].join('');

@@ -616,9 +616,10 @@ header h1 {
     padding: 8px 4px;
     text-align: center;
     border-bottom: 2px solid var(--border);
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: normal;
+    word-break: break-all;
 }
 
 .log-table th.col-fixed {
