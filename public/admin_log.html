@@ -1,305 +1,76 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>売上ログ — 学校祭POS</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Oswald:wght@600&display=swap');
-  :root {
-    --bg:#F4F6FA; --surface:#fff; --primary:#3B4CCA; --primary-light:#EEF0FF;
-    --accent:#FF6B35; --green:#06B777; --red:#E53E3E;
-    --text:#1A202C; --text-muted:#718096; --border:#E2E8F0;
-    --shadow:0 2px 12px rgba(0,0,0,0.08); --radius:14px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);font-family:'Noto Sans JP',sans-serif;color:var(--text);min-height:100vh;}
-
-  header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
-  .admin-badge{background:var(--primary);color:white;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;}
-  .log-badge{background:#6B46C1;color:white;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;}
-  header h1{font-size:1.05rem;font-weight:700;flex:1;}
-  .back-btn{padding:7px 14px;background:var(--primary-light);color:var(--primary);border:none;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
-  .back-btn:hover{background:#D6DCFF;}
-
-  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--border);}
-  .day-btn{padding:7px 16px;border-radius:10px;border:2px solid var(--border);background:white;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
-  .day-btn.active.day1{background:#3B4CCA;color:white;border-color:#3B4CCA;}
-  .day-btn.active.day2{background:var(--red);color:white;border-color:var(--red);}
-  .store-filter{padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.82rem;min-width:200px;}
-  .method-filter{padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.82rem;}
-  .spacer{flex:1;}
-  .csv-btn{padding:8px 18px;background:var(--green);color:white;border:none;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px;}
-  .csv-btn:hover{background:#059862;}
-  .csv-btn:active{transform:scale(0.97);}
-
-  .summary-bar{display:flex;gap:12px;padding:14px 24px;flex-wrap:wrap;}
-  .sum-card{background:var(--surface);border-radius:12px;padding:12px 20px;border:1px solid var(--border);display:flex;flex-direction:column;gap:2px;min-width:130px;}
-  .sum-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
-  .sum-value{font-family:'Oswald',sans-serif;font-size:1.5rem;color:var(--primary);}
-  .sum-value.green{color:var(--green);}
-
-  .table-wrap{padding:0 24px 40px;overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);font-size:0.84rem;}
-  thead tr{background:#F7F9FC;}
-  th{padding:11px 14px;text-align:left;font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid var(--border);white-space:nowrap;}
-  td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:#FAFBFF;}
-  .col-no{width:50px;color:var(--text-muted);font-family:'Oswald',sans-serif;}
-  .col-time{width:90px;white-space:nowrap;font-family:'Oswald',sans-serif;font-size:0.88rem;}
-  .col-store{width:200px;font-weight:500;}
-  .col-items{}
-  .col-method{width:80px;}
-  .col-total{width:90px;text-align:right;font-family:'Oswald',sans-serif;font-size:1rem;color:var(--green);font-weight:700;}
-  .method-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:0.72rem;font-weight:700;}
-  .method-cash{background:#E6F9F2;color:#06B777;}
-  .method-paypay{background:#FEE2E2;color:#E53E3E;}
-  .item-list{display:flex;flex-direction:column;gap:2px;}
-  .item-row{font-size:0.8rem;color:var(--text);}
-  .item-qty{color:var(--text-muted);margin-left:4px;}
-  .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:0.9rem;}
-
-  #connecting{position:fixed;inset:0;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:999;}
-  .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.9s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  /* ログイン画面 */
-  .login-gate{position:fixed;inset:0;background:linear-gradient(135deg,#1A1A2E,#16213E);display:flex;align-items:center;justify-content:center;z-index:1000;}
-  .login-box{background:white;border-radius:24px;padding:40px 36px;width:90%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-  .login-icon{font-size:3rem;margin-bottom:10px;}
-  .login-box h2{font-size:1.3rem;font-weight:700;margin-bottom:6px;}
-  .login-box p{font-size:0.85rem;color:var(--text-muted);margin-bottom:20px;}
-  .login-input{width:100%;padding:14px 16px;font-size:1.1rem;border:2px solid var(--border);border-radius:12px;font-family:inherit;text-align:center;letter-spacing:0.1em;margin-bottom:10px;}
-  .login-input:focus{outline:none;border-color:var(--primary);}
-  .login-error{display:none;color:var(--red);font-size:0.82rem;margin-bottom:10px;}
-  .login-btn{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;}
-</style>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/admin_log.css">
+  <title>売上ログ — 学校祭POS</title>
 </head>
+
 <body>
 
-<div id="login-gate" class="login-gate">
-  <div class="login-box">
-    <div class="login-icon">🔒</div>
-    <h2>管理画面ログイン</h2>
-    <p>パスワードを入力してください</p>
-    <input type="password" id="login-pw-input" class="login-input" placeholder="パスワード" onkeydown="if(event.key==='Enter')submitLogin()">
-    <div id="login-error" class="login-error">パスワードが違います</div>
-    <button class="login-btn" onclick="submitLogin()">ログイン</button>
-  </div>
-</div>
-
-<div id="app" style="display:none;">
-  <header>
-    <div class="admin-badge">ADMIN</div>
-    <div class="log-badge">📋 LOG</div>
-    <h1>売上ログ</h1>
-    <a href="/admin" class="back-btn">← 管理画面に戻る</a>
-  </header>
-
-  <div class="toolbar">
-    <button class="day-btn active day1" id="btn-day1" onclick="setDay(1)">📅 1日目</button>
-    <button class="day-btn day2" id="btn-day2" onclick="setDay(2)">📅 2日目</button>
-    <select class="store-filter" id="store-filter" onchange="applyFilter()">
-      <option value="">全出店</option>
-    </select>
-    <select class="method-filter" id="method-filter" onchange="applyFilter()">
-      <option value="">全支払方法</option>
-      <option value="cash">現金</option>
-      <option value="paypay">PayPay</option>
-    </select>
-    <div class="spacer"></div>
-    <button class="csv-btn" onclick="exportCSV()">📥 CSVエクスポート</button>
+  <div id="login-gate" class="login-gate">
+    <div class="login-box">
+      <div class="login-icon">🔒</div>
+      <h2>管理画面ログイン</h2>
+      <p>パスワードを入力してください</p>
+      <input type="password" id="login-pw-input" class="login-input" placeholder="パスワード"
+        onkeydown="if(event.key==='Enter')submitLogin()">
+      <div id="login-error" class="login-error">パスワードが違います</div>
+      <button class="login-btn" onclick="submitLogin()">ログイン</button>
+    </div>
   </div>
 
-  <div class="summary-bar" id="summary-bar"></div>
+  <div id="app" style="display:none;">
+    <header>
+      <div class="admin-badge">ADMIN</div>
+      <div class="log-badge">📋 LOG</div>
+      <h1>売上ログ</h1>
+      <a href="/admin" class="back-btn">← 管理画面に戻る</a>
+    </header>
 
-  <div class="table-wrap">
-    <table id="log-table">
-      <thead>
-        <tr>
-          <th class="col-no">#</th>
-          <th class="col-time">時刻</th>
-          <th class="col-store">出店</th>
-          <th class="col-items">商品</th>
-          <th class="col-method">支払</th>
-          <th class="col-total">合計</th>
-        </tr>
-      </thead>
-      <tbody id="log-tbody">
-        <tr><td colspan="6" class="empty-state">読み込み中...</td></tr>
-      </tbody>
-    </table>
+    <div class="toolbar">
+      <button class="day-btn active day1" id="btn-day1" onclick="setDay(1)">📅 1日目</button>
+      <button class="day-btn day2" id="btn-day2" onclick="setDay(2)">📅 2日目</button>
+      <select class="store-filter" id="store-filter" onchange="applyFilter()">
+        <option value="">全出店</option>
+      </select>
+      <select class="method-filter" id="method-filter" onchange="applyFilter()">
+        <option value="">全支払方法</option>
+        <option value="cash">現金</option>
+        <option value="paypay">PayPay</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="csv-btn" onclick="exportCSV()">📥 CSVエクスポート</button>
+    </div>
+
+    <div class="summary-bar" id="summary-bar"></div>
+
+    <div class="table-wrap">
+      <table id="log-table">
+        <thead>
+          <tr>
+            <th class="col-no">#</th>
+            <th class="col-time">時刻</th>
+            <th class="col-store">出店</th>
+            <th class="col-items">商品</th>
+            <th class="col-method">支払</th>
+            <th class="col-total">合計</th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody">
+          <tr>
+            <td colspan="6" class="empty-state">読み込み中...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<script>
-const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-let ws, allSales = [], filteredSales = [], currentDay = 1;
-let adminPassword = sessionStorage.getItem('admin_pw') || '';
-
-function connect() {
-  ws = new WebSocket(WS_URL);
-  ws.onopen = () => {
-    if (adminPassword) {
-      ws.send(JSON.stringify({ type:'REGISTER', role:'admin', storeId:null, password: adminPassword }));
-    } else {
-      showLogin(false);
-    }
-  };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'AUTH_FAILED') { showLogin(true); return; }
-    if (msg.type === 'REGISTERED') {
-      hideLogin();
-      loadSales();
-    }
-    if (msg.type === 'ALL_SALES_DATA') {
-      allSales = msg.sales || [];
-      currentDay = msg.currentDay;
-      updateDayBtns();
-      buildStoreFilter(msg.storeList || []);
-      applyFilter();
-    }
-  };
-  ws.onclose = () => setTimeout(connect, 2000);
-}
-
-function showLogin(isError) {
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-gate').style.display = 'flex';
-  document.getElementById('login-error').style.display = isError ? 'block' : 'none';
-  if (isError) { sessionStorage.removeItem('admin_pw'); adminPassword = ''; document.getElementById('login-pw-input').value = ''; }
-}
-function hideLogin() {
-  document.getElementById('login-gate').style.display = 'none';
-  document.getElementById('app').style.display = '';
-}
-function submitLogin() {
-  const pw = document.getElementById('login-pw-input').value;
-  if (!pw) return;
-  adminPassword = pw;
-  sessionStorage.setItem('admin_pw', pw);
-  ws.send(JSON.stringify({ type:'REGISTER', role:'admin', storeId:null, password: adminPassword }));
-}
-
-function loadSales() {
-  ws.send(JSON.stringify({ type:'GET_ALL_SALES', day: currentDay }));
-}
-
-function setDay(day) {
-  currentDay = day;
-  updateDayBtns();
-  ws.send(JSON.stringify({ type:'GET_ALL_SALES', day }));
-}
-
-function updateDayBtns() {
-  document.getElementById('btn-day1').className = 'day-btn' + (currentDay === 1 ? ' active day1' : '');
-  document.getElementById('btn-day2').className = 'day-btn' + (currentDay === 2 ? ' active day2' : '');
-}
-
-function buildStoreFilter(storeList) {
-  const sel = document.getElementById('store-filter');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">全出店</option>';
-  storeList.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.name;
-    sel.appendChild(opt);
-  });
-  if (cur) sel.value = cur;
-}
-
-function applyFilter() {
-  const storeId = document.getElementById('store-filter').value;
-  const method = document.getElementById('method-filter').value;
-  filteredSales = allSales.filter(s => {
-    if (storeId && s.storeId !== storeId) return false;
-    if (method && s.method !== method) return false;
-    return true;
-  });
-  renderSummary();
-  renderTable();
-}
-
-function renderSummary() {
-  const total = filteredSales.reduce((s, r) => s + r.total, 0);
-  const cash = filteredSales.filter(r => r.method === 'cash').reduce((s, r) => s + r.total, 0);
-  const paypay = filteredSales.filter(r => r.method === 'paypay').reduce((s, r) => s + r.total, 0);
-  document.getElementById('summary-bar').innerHTML =
-    sumCard('取引件数', filteredSales.length + '件', '') +
-    sumCard('売上合計', '¥' + total.toLocaleString(), 'green') +
-    sumCard('現金', '¥' + cash.toLocaleString(), '') +
-    sumCard('PayPay', '¥' + paypay.toLocaleString(), '');
-}
-function sumCard(label, value, cls) {
-  return '<div class="sum-card"><div class="sum-label">' + label + '</div><div class="sum-value ' + cls + '">' + value + '</div></div>';
-}
-
-function renderTable() {
-  const tbody = document.getElementById('log-tbody');
-  if (!filteredSales.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">売上データがありません</td></tr>';
-    return;
-  }
-  tbody.innerHTML = filteredSales.map((s, i) => {
-    const dt = new Date(s.time);
-    // UTC→JST
-    const jst = new Date(dt.getTime() + 9 * 3600 * 1000);
-    const timeStr = jst.toISOString().slice(11, 16);
-    const methodClass = s.method === 'paypay' ? 'method-paypay' : 'method-cash';
-    const methodLabel = s.method === 'paypay' ? 'PayPay' : '現金';
-    const items = (s.items || []).map(item =>
-      '<div class="item-row">' + esc(item.name) + '<span class="item-qty">× ' + item.qty + ' ¥' + (item.price * item.qty).toLocaleString() + '</span></div>'
-    ).join('');
-    return '<tr>' +
-      '<td class="col-no">' + (i + 1) + '</td>' +
-      '<td class="col-time">' + timeStr + '</td>' +
-      '<td class="col-store">' + esc(s.storeName) + '</td>' +
-      '<td class="col-items"><div class="item-list">' + items + '</div></td>' +
-      '<td class="col-method"><span class="method-badge ' + methodClass + '">' + methodLabel + '</span></td>' +
-      '<td class="col-total">¥' + s.total.toLocaleString() + '</td>' +
-    '</tr>';
-  }).join('');
-}
-
-function exportCSV() {
-  if (!filteredSales.length) { alert('データがありません'); return; }
-  const rows = [['No', '日時(JST)', '出店ID', '出店名', '商品', '個数', '単価', '小計', '支払方法', '合計']];
-  filteredSales.forEach((s, i) => {
-    const dt = new Date(s.time);
-    const jst = new Date(dt.getTime() + 9 * 3600 * 1000);
-    const dateStr = jst.toISOString().slice(0, 16).replace('T', ' ');
-    (s.items || []).forEach((item, j) => {
-      rows.push([
-        j === 0 ? i + 1 : '',
-        j === 0 ? dateStr : '',
-        j === 0 ? s.storeId : '',
-        j === 0 ? s.storeName : '',
-        item.name,
-        item.qty,
-        item.price,
-        item.price * item.qty,
-        j === 0 ? (s.method === 'paypay' ? 'PayPay' : '現金') : '',
-        j === 0 ? s.total : '',
-      ]);
-    });
-  });
-  const csv = '\uFEFF' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  const dayLabel = currentDay === 1 ? '1日目' : '2日目';
-  a.download = '売上ログ_' + dayLabel + '_' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-connect();
-</script>
+  <script src="/js/admin_log.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,994 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap');
+
+:root {
+    --bg: #1A1A2E;
+    --surface: #16213E;
+    --primary: #E94560;
+    --accent: #F5A623;
+    --green: #0EC96B;
+    --red: #E53E3E;
+    --text: #E8E8F0;
+    --text-muted: #7A7A9A;
+    --border: #2A2A4A;
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text);
+}
+
+header {
+    background: var(--surface);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.staff-badge {
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+header h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    flex: 1;
+}
+
+.time-display {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.4rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+}
+
+.main {
+    display: flex;
+    height: calc(100vh - 58px);
+    height: calc(100dvh - 58px);
+    overflow: hidden;
+}
+
+/* ── 左パネル ── */
+.status-panel {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 14px;
+    gap: 14px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.stat-card {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 2rem;
+    color: var(--accent);
+}
+
+.stat-unit {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.stat-card.green .stat-value {
+    color: var(--green);
+}
+
+.stock-section {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 60px;
+}
+
+.stock-section h3 {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.stock-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.stock-item {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 9px 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+}
+
+.stock-name {
+    font-size: 0.83rem;
+    font-weight: 500;
+}
+
+.stock-price {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.stock-count {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text);
+}
+
+.stock-count.low {
+    color: var(--primary);
+}
+
+.stock-count.over {
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.btn-overstock {
+    width: 100%;
+    margin-top: 4px;
+    padding: 5px 8px;
+    background: #F5A62322;
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-overstock:hover {
+    background: #F5A62344;
+}
+
+.btn-overstock.active {
+    background: var(--accent);
+    color: #000;
+}
+
+/* ── モード切替ボタン ── */
+/* カウントアップモードボタン */
+.mode-btn-cu {
+    margin-top: 4px;
+    flex-shrink: 0;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s;
+}
+
+.mode-btn-cu:hover {
+    border-color: #06D6A0;
+    color: #06D6A0;
+}
+
+.mode-btn-cu.active {
+    background: #06D6A022;
+    border-color: #06D6A0;
+    color: #06D6A0;
+}
+
+.mode-btn-cu .mode-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mode-btn-cu.active .mode-dot {
+    background: #06D6A0;
+}
+
+/* 設定パネル */
+.settings-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.settings-panel label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.theme-btns {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.theme-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+}
+
+.theme-dot.selected {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.logo-upload-btn {
+    padding: 5px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--text);
+    width: 100%;
+}
+
+.mode-btn {
+    margin-top: auto;
+    flex-shrink: 0;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.18s;
+}
+
+.mode-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.mode-btn.active {
+    background: #F5A62322;
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.mode-btn .mode-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mode-btn.active .mode-dot {
+    background: var(--accent);
+}
+
+/* ── 右パネル ── */
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ── 決済待ちエリア ── */
+.pending-area {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 120px;
+    max-height: 42vh;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.pending-idle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.idle-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.pending-idle p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.payment-panel {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    overflow: hidden;
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display : flex;
+    flex-direction: column;
+    max-height: 40vh;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.92);
+        opacity: 0
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+.payment-panel-header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.payment-method-tag {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.method-paypay {
+    background: #C0392B22;
+    color: #E74C3C;
+    border: 1px solid #C0392B55;
+}
+
+.method-cash {
+    background: #06D6A022;
+    color: #06D6A0;
+    border: 1px solid #06D6A055;
+}
+
+.waiting-label {
+    color: var(--text-muted);
+    font-size: 0.83rem;
+    flex: 1;
+}
+
+.waiting-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1s ease infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1
+    }
+
+    50% {
+        opacity: 0.2
+    }
+}
+
+.payment-items {
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+    max-height: 160px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.payment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.payment-item:last-child {
+    border-bottom: none;
+}
+
+.pi-name {
+    font-size: 0.88rem;
+}
+
+.pi-qty {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+}
+
+.pi-price {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.05rem;
+    color: var(--accent);
+}
+
+.payment-total {
+    margin: 0 20px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-shrink: 0;
+}
+
+.pt-label {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+}
+
+.pt-amount {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+}
+
+.btn-confirm {
+    margin: 14px 20px 18px;
+    width: calc(100% - 40px);
+    padding: 18px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--green), #05A355);
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(14, 201, 107, 0.35);
+    animation: pulse 1.8s ease infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 8px 24px rgba(14, 201, 107, 0.35)
+    }
+
+    50% {
+        box-shadow: 0 8px 36px rgba(14, 201, 107, 0.6)
+    }
+}
+
+.btn-confirm:active {
+    transform: scale(0.97);
+    animation: none;
+}
+
+/* ── 売上ログ（メイン領域）── */
+.log-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.log-header {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.log-header h3 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.log-count {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.log-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    padding-bottom: 132px;
+}
+
+/* ── 表形式ログ ── */
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* ヘッダー行 */
+.log-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.log-table th {
+    background: #0D1A30;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 8px 4px;
+    text-align: center;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-table th.col-fixed {
+    text-align: left;
+    padding-left: 10px;
+}
+
+/* データ行 */
+.log-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    animation: fadeSlide 0.22s ease;
+}
+
+@keyframes fadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-5px)
+    }
+
+    to {
+        opacity: 1;
+        transform: none
+    }
+}
+
+.log-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ① 個数セル：数字をセルの縦幅いっぱいに表示 */
+.log-table td {
+    padding: 0 4px;
+    height: 44px;
+    /* 行高さを固定 */
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.log-table td.col-fixed {
+    text-align: left;
+    padding-left: 10px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.82rem;
+}
+
+/* 0個は薄く */
+.log-table td.qty-zero {
+    color: var(--border);
+}
+
+/* ① 個数あり：行の縦幅ぴったりの大文字数字 */
+.log-table td.qty-pos {
+    color: var(--accent);
+    font-weight: 700;
+    /* line-height=1 + font-size=heightで行高いっぱいに */
+    font-size: 2.4rem;
+    line-height: 44px;
+    padding: 0 2px;
+}
+
+.col-num {
+    width: 36px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.col-ticket {
+    width: 72px;
+}
+
+/* ③ 番号札列 */
+.col-delivered {
+    width: 44px;
+}
+
+/* ④ チェックボックス列 */
+.col-time {
+    width: 48px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+}
+
+.col-method {
+    width: 54px;
+}
+
+.col-total {
+    width: 68px;
+    color: var(--green);
+}
+
+.col-revert {
+    width: 46px;
+}
+
+.log-method {
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.log-method.cash {
+    background: #06D6A022;
+    color: #06D6A0;
+}
+
+.log-method.paypay {
+    background: #E74C3C22;
+    color: #E74C3C;
+}
+
+/* 取り消しボタン */
+.btn-revert {
+    background: none;
+    border: 1px solid #E53E3E44;
+    color: #E53E3E;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-family: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.btn-revert:hover {
+    background: #E53E3E22;
+}
+
+.btn-revert:active {
+    transform: scale(0.95);
+}
+
+/* ③ 番号札セル */
+.ticket-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    gap: 1px;
+}
+
+.ticket-order-num {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+}
+
+.ticket-circle {
+    font-size: 2rem;
+    line-height: 1;
+    color: #fff;
+}
+
+/* ④ チェックボックス */
+.delivered-cb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.delivered-cb:checked {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+.delivered-cb:checked::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.delivered-cb:active {
+    transform: scale(0.9);
+}
+
+/* 渡し済みの行 */
+.log-table tbody tr.is-delivered td {
+    opacity: 0.38;
+}
+
+.log-table tbody tr.is-delivered td.col-delivered-td {
+    opacity: 1;
+}
+
+.log-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    padding: 40px 20px;
+}
+
+/* ── 確認ダイアログ ── */
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.dialog-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.dialog {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 90%;
+    max-width: 360px;
+    text-align: center;
+    transform: scale(0.94);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dialog-overlay.visible .dialog {
+    transform: scale(1);
+}
+
+.dialog-icon {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+}
+
+.dialog h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.dialog-detail {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 14px 0;
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    text-align: left;
+}
+
+.dialog-detail strong {
+    color: var(--text);
+}
+
+.dialog-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.btn-dialog {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-dialog:active {
+    transform: scale(0.96);
+}
+
+.btn-cancel-dialog {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+.btn-ok-dialog {
+    background: var(--red);
+    color: white;
+}
+
+/* 接続待ち */
+#connecting {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    z-index: 300;
+}
+
+.spinner {
+    width: 46px;
+    height: 46px;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+#connecting p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.day-badge-hdr {
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.day-badge-hdr.day1 {
+    background: #3B4CCA;
+    color: white;
+}
+
+.day-badge-hdr.day2 {
+    background: #E53E3E;
+    color: white;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}

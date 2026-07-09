@@ -1,0 +1,525 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap');
+
+:root {
+    --bg: #1A1A2E;
+    --surface: #16213E;
+    --primary: #7B61FF;
+    --accent: #F5A623;
+    --green: #0EC96B;
+    --red: #E53E3E;
+    --text: #E8E8F0;
+    --text-muted: #7A7A9A;
+    --border: #2A2A4A;
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text);
+}
+
+header {
+    background: var(--surface);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.by-badge {
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+header h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    flex: 1;
+}
+
+.time-display {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.4rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+}
+
+.main {
+    display: flex;
+    height: calc(100vh - 58px);
+    overflow: hidden;
+}
+
+/* ── 左パネル ── */
+.status-panel {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 14px;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.stat-card {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 2rem;
+    color: var(--accent);
+}
+
+.stat-unit {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.stat-card.green .stat-value {
+    color: var(--green);
+}
+
+.stock-section {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.stock-section h3 {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.stock-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.stock-item {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 9px 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+}
+
+.stock-name {
+    font-size: 0.83rem;
+    font-weight: 500;
+}
+
+.stock-price {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.stock-count {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.2rem;
+    color: var(--text);
+}
+
+.stock-count.low {
+    color: var(--primary);
+}
+
+/* ⑤ モード表示（切替不可） */
+.mode-indicator {
+    margin-top: auto;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: default;
+    user-select: none;
+}
+
+.mode-indicator.active {
+    background: #F5A62322;
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.mode-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mode-indicator.active .mode-dot {
+    background: var(--accent);
+}
+
+/* ── 右パネル：ログのみ（⑤ 決済待ちエリアなし） ── */
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ── 売上ログ ── */
+.log-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.log-header {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.log-header h3 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.log-count {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.log-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+/* ── 表形式ログ ── */
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.log-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.log-table th {
+    background: #0D1A30;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 8px 4px;
+    text-align: center;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-table th.col-fixed {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.log-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    animation: fadeSlide 0.22s ease;
+}
+
+@keyframes fadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-5px)
+    }
+
+    to {
+        opacity: 1;
+        transform: none
+    }
+}
+
+.log-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ⑤ バックヤードは行を大きく（数字を行高いっぱいに） */
+.log-table td {
+    padding: 0 4px;
+    height: 56px;
+    /* バックヤードは少し大きめ */
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.log-table td.col-fixed {
+    text-align: left;
+    padding-left: 10px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.82rem;
+}
+
+.log-table td.qty-zero {
+    color: var(--border);
+}
+
+.log-table td.qty-pos {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 3rem;
+    /* バックヤードはさらに大きく */
+    line-height: 56px;
+    padding: 0 2px;
+}
+
+.col-num {
+    width: 36px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.col-ticket {
+    width: 72px;
+}
+
+.col-delivered {
+    width: 44px;
+}
+
+.col-time {
+    width: 48px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+}
+
+.col-method {
+    width: 54px;
+}
+
+.col-total {
+    width: 68px;
+    color: var(--green);
+}
+
+.log-method {
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.log-method.cash {
+    background: #06D6A022;
+    color: #06D6A0;
+}
+
+.log-method.paypay {
+    background: #E74C3C22;
+    color: #E74C3C;
+}
+
+/* ③ 番号札セル */
+.ticket-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    gap: 1px;
+}
+
+.ticket-order-num {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+}
+
+.ticket-circle {
+    font-size: 2.4rem;
+    line-height: 1;
+    color: #fff;
+}
+
+/* ④ チェックボックス */
+.delivered-cb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.delivered-cb:checked {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+.delivered-cb:checked::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.delivered-cb:active {
+    transform: scale(0.9);
+}
+
+.log-table tbody tr.is-delivered td {
+    opacity: 0.38;
+}
+
+.log-table tbody tr.is-delivered td.col-delivered-td {
+    opacity: 1;
+}
+
+.log-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    padding: 40px 20px;
+}
+
+/* 接続待ち */
+#connecting {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    z-index: 300;
+}
+
+.spinner {
+    width: 46px;
+    height: 46px;
+    border: 4px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+#connecting p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.day-badge-hdr {
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.day-badge-hdr.day1 {
+    background: #3B4CCA;
+    color: white;
+}
+
+.day-badge-hdr.day2 {
+    background: #E53E3E;
+    color: white;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}

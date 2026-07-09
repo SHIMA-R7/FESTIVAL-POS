@@ -1,624 +1,104 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<title>ご注文</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
-  :root{
-    --bg:#FFF8F0;--surface:#FFFFFF;--primary:#FF6B35;--primary-dark:#E85A24;
-    --accent2:#06D6A0;--text:#2D2D2D;--text-muted:#888;--border:#F0E8E0;
-    --shadow:0 4px 20px rgba(255,107,53,0.12);--radius:20px;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  /* ── テーマ ── */
-  body.theme-orange{ --primary:#FF6B35;--primary-dark:#E85A24;--bg:#FFF8F0;--border:#F0E8E0;--shadow:0 4px 20px rgba(255,107,53,0.12); }
-  body.theme-red    { --primary:#E53E3E;--primary-dark:#C53030;--bg:#FFF5F5;--border:#FED7D7;--shadow:0 4px 20px rgba(229,62,62,0.12); }
-  body.theme-blue   { --primary:#3B82F6;--primary-dark:#2563EB;--bg:#EFF6FF;--border:#BFDBFE;--shadow:0 4px 20px rgba(59,130,246,0.12); }
-  body.theme-green  { --primary:#10B981;--primary-dark:#059669;--bg:#F0FDF4;--border:#BBF7D0;--shadow:0 4px 20px rgba(16,185,129,0.12); }
-  body.theme-purple { --primary:#8B5CF6;--primary-dark:#7C3AED;--bg:#F5F3FF;--border:#DDD6FE;--shadow:0 4px 20px rgba(139,92,246,0.12); }
-  body.theme-dark   { --primary:#6366F1;--primary-dark:#4F46E5;--bg:#1E1E2E;--surface:#2A2A3E;--border:#3A3A5C;--text:#E2E8F0;--text-muted:#94A3B8;--shadow:0 4px 20px rgba(99,102,241,0.2); }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html{height:100%;height:-webkit-fill-available;}
-  body{
-    height:100vh;height:-webkit-fill-available;
-    overflow:hidden;background:var(--bg);
-    font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text);
-    display:flex;flex-direction:column;
-  }
-
-  /* ── ヘッダー ── */
-  header{
-    background:var(--primary);color:white;
-    padding:10px 14px;
-    padding-top:calc(10px + var(--safe-top));
-    display:flex;align-items:center;gap:10px;
-    box-shadow:0 3px 12px rgba(255,107,53,0.35);
-    flex-shrink:0;
-  }
-  .logo-wrap{flex-shrink:0;}
-  .logo-img{height:52px;width:52px;object-fit:contain;border-radius:10px;background:rgba(255,255,255,0.15);display:block;}
-  .logo-placeholder{height:52px;width:52px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:rgba(255,255,255,0.15);border-radius:10px;}
-  header h1{font-size:1.1rem;font-weight:800;letter-spacing:0.03em;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .store-badge{background:rgba(255,255,255,0.25);border-radius:20px;padding:4px 10px;font-size:0.72rem;font-weight:700;flex-shrink:0;}
-
-  /* ── メインレイアウト ── */
-  .main{display:flex;flex:1;overflow:hidden;min-height:0;}
-
-  /* ── 商品グリッド ── */
-  .products-area{
-    flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    padding:12px;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
-    gap:10px;align-content:start;
-  }
-  .product-card{
-    background:var(--surface);border-radius:var(--radius);padding:0;text-align:center;
-    cursor:pointer;border:3px solid transparent;box-shadow:var(--shadow);
-    transition:transform 0.15s,border-color 0.15s;user-select:none;
-    position:relative;overflow:hidden;display:flex;flex-direction:column;
-  }
-  .product-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--primary);opacity:0;transition:opacity 0.15s;}
-  .product-card:active{transform:scale(0.94);}
-  .product-card.in-cart{border-color:var(--primary);}
-  .product-card.in-cart::before{opacity:1;}
-  .product-card.out-of-stock{opacity:0.4;cursor:not-allowed;}
-  .product-img{width:100%;height:90px;object-fit:cover;background:#f5f5f5;display:block;}
-  .product-img-placeholder{width:100%;height:90px;background:linear-gradient(135deg,#FFF0E8,#FFE4D6);display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
-  .product-info{padding:8px 6px 10px;}
-  .product-name{font-size:0.85rem;font-weight:800;margin-bottom:3px;line-height:1.3;}
-  .product-price{font-size:1.1rem;font-weight:800;color:var(--primary);}
-  .product-price span{font-size:0.68rem;}
-  .product-stock{font-size:0.66rem;color:var(--text-muted);margin-top:2px;}
-  .product-stock.low{color:#FF4444;font-weight:700;}
-  .cart-badge{position:absolute;top:5px;right:5px;background:var(--primary);color:white;border-radius:50%;width:20px;height:20px;font-size:0.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0);transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);}
-  .cart-badge.visible{opacity:1;transform:scale(1);}
-
-  /* ── カートサイドバー ── */
-  .cart-sidebar{
-    width:270px;background:var(--surface);border-left:2px solid var(--border);
-    display:flex;flex-direction:column;
-    box-shadow:-4px 0 20px rgba(0,0,0,0.06);
-    padding-bottom:var(--safe-bottom);
-  }
-  .cart-header{padding:12px 14px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
-  .cart-header h2{font-size:0.95rem;font-weight:800;flex:1;}
-  .cart-count{background:var(--primary);color:white;border-radius:20px;padding:2px 9px;font-size:0.75rem;font-weight:800;}
-  .cart-items{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px;display:flex;flex-direction:column;gap:6px;}
-  .cart-item{background:var(--bg);border-radius:11px;padding:8px 9px;display:flex;align-items:center;gap:7px;animation:slideIn 0.2s ease;}
-  @keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
-  .cart-item-name{flex:1;font-size:0.8rem;font-weight:700;line-height:1.3;}
-  .cart-item-price{font-size:0.74rem;color:var(--text-muted);}
-  .qty-controls{display:flex;align-items:center;gap:4px;}
-  .qty-btn{width:26px;height:26px;border-radius:50%;border:none;background:var(--primary);color:white;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-  .qty-btn:active{transform:scale(0.88);}
-  .qty-btn.minus{background:#EEE;color:var(--text);}
-  .qty-num{font-size:0.9rem;font-weight:800;min-width:16px;text-align:center;}
-  .cart-empty{text-align:center;color:var(--text-muted);padding:30px 12px;font-size:0.84rem;}
-  .cart-empty-icon{font-size:2.5rem;display:block;margin-bottom:7px;}
-
-  /* ── 合計・決済ボタン：常に可視 ── */
-  .cart-footer{
-    padding:12px 14px;border-top:2px solid var(--border);flex-shrink:0;
-    background:var(--surface);
-  }
-  .total-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
-  .total-label{font-size:0.85rem;font-weight:700;color:var(--text-muted);}
-  .total-amount{font-size:1.6rem;font-weight:800;color:var(--primary);}
-  .total-amount span{font-size:0.9rem;}
-  .btn-pay{
-    width:100%;padding:16px;border-radius:14px;border:none;
-    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-    color:white;font-size:1rem;font-weight:800;font-family:inherit;
-    cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;
-    box-shadow:0 6px 20px rgba(255,107,53,0.4);letter-spacing:0.04em;
-    -webkit-appearance:none;
-  }
-  .btn-pay:active{transform:scale(0.97);}
-  .btn-pay:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
-
-  /* ── モーダル ── */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 0.25s;}
-  .modal-overlay.visible{opacity:1;pointer-events:all;}
-  .modal{background:white;border-radius:26px;padding:26px 22px;width:92%;max-width:360px;text-align:center;transform:translateY(20px) scale(0.96);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 20px 60px rgba(0,0,0,0.25);}
-  .modal-overlay.visible .modal{transform:none;}
-  .modal h2{font-size:1.2rem;font-weight:800;margin-bottom:5px;}
-  .modal-total{font-size:2.1rem;font-weight:800;color:var(--primary);margin:12px 0;}
-  .modal-total span{font-size:1rem;}
-  .pay-method-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
-  .pay-method-btn{padding:16px 8px;border-radius:14px;border:3px solid transparent;cursor:pointer;font-family:inherit;font-weight:800;font-size:0.95rem;transition:all 0.2s;-webkit-appearance:none;}
-  .pay-method-btn:active{transform:scale(0.94);}
-  .pay-method-btn.cash{background:#F0FFF8;color:#00875A;border-color:#00875A;}
-  .pay-method-btn.paypay{background:#FFF0F0;color:#C0392B;border-color:#E74C3C;}
-  .pay-method-icon{font-size:1.9rem;display:block;margin-bottom:4px;}
-  .btn-cancel-modal{margin-top:14px;background:none;border:none;color:var(--text-muted);font-size:0.86rem;cursor:pointer;font-family:inherit;padding:8px;border-radius:8px;-webkit-appearance:none;}
-
-  .qr-screen{display:none;} .qr-screen.active{display:block;}
-  .qr-screen h2{font-size:1.15rem;font-weight:800;color:#C0392B;margin-bottom:5px;}
-  .qr-screen .qr-amount{font-size:1.9rem;font-weight:800;color:var(--primary);margin:10px 0;}
-  .qr-wrap{width:180px;height:180px;margin:0 auto;background:white;border:3px solid #E74C3C;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:6px;}
-  #qr-canvas{width:100%;height:100%;}
-  .qr-note{font-size:0.78rem;color:var(--text-muted);margin-top:10px;line-height:1.65;}
-  .qr-note strong{color:var(--primary);}
-
-  .cash-screen{display:none;} .cash-screen.active{display:block;}
-  .cash-icon{font-size:3.2rem;margin-bottom:8px;display:block;}
-  .cash-screen h2{font-size:1.25rem;font-weight:800;margin-bottom:5px;}
-  .cash-amount{font-size:2.2rem;font-weight:800;color:var(--primary);margin:8px 0;}
-  .cash-screen p{color:var(--text-muted);font-size:0.86rem;line-height:1.65;}
-
-  /* ── 完了 ── */
-  .done-overlay{position:fixed;inset:0;background:var(--accent2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;}
-  .done-overlay.visible{opacity:1;pointer-events:all;}
-  .done-icon{font-size:5rem;animation:bounce 0.5s ease;}
-  .done-text{font-size:1.7rem;font-weight:800;color:white;margin-top:12px;text-shadow:0 2px 10px rgba(0,0,0,0.15);}
-  .done-sub{color:rgba(255,255,255,0.85);margin-top:6px;font-size:0.92rem;}
-  @keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
-
-  /* ── 接続待ち ── */
-  #connecting{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:300;}
-  .spinner{width:44px;height:44px;border:5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.9s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  #connecting p{font-size:0.92rem;color:var(--text-muted);font-weight:700;}
-
-  .day-badge-hdr{padding:3px 10px;border-radius:16px;font-size:0.72rem;font-weight:700;flex-shrink:0;}
-  .day-badge-hdr.day1{background:rgba(255,255,255,0.25);color:white;}
-  .day-badge-hdr.day2{background:#E53E3E;color:white;}
-  .over-banner{
-    background:linear-gradient(135deg,#F5A623,#E88A00);
-    color:#000;font-size:0.82rem;font-weight:700;
-    text-align:center;padding:7px 12px;
-    letter-spacing:0.04em;flex-shrink:0;
-  }
-  .product-stock.over-mode{
-    color:var(--accent,#F5A623);font-weight:700;font-size:0.72rem;
-  }
-  ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-  /* ═══════════════════════════════════════
-     📱 スマホ対応（幅767px以下）
-     商品グリッドを上・カートを下に縦並び
-  ═══════════════════════════════════════ */
-  @media (max-width: 767px) {
-    header { padding:8px 12px; padding-top:calc(8px + var(--safe-top)); gap:8px; }
-    .logo-img, .logo-placeholder { height:38px; width:38px; font-size:1.5rem; }
-    header h1 { font-size:0.92rem; }
-    .store-badge { display:none; }
-
-    .main { flex-direction: column; }
-
-    .products-area {
-      flex: 1;
-      min-height: 0;
-      padding: 8px;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 7px;
-    }
-    .product-img, .product-img-placeholder { height: 68px; font-size: 2rem; }
-    .product-info { padding: 5px 4px 7px; }
-    .product-name { font-size: 0.75rem; }
-    .product-price { font-size: 0.95rem; }
-    .product-stock { font-size: 0.6rem; }
-    .cart-badge { width:17px; height:17px; font-size:0.6rem; }
-
-    .cart-sidebar {
-      width: 100%;
-      border-left: none;
-      border-top: 2px solid var(--border);
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-      flex: 0 0 auto;
-      max-height: 38vh;
-      min-height: 120px;
-    }
-    .cart-header { padding: 8px 12px; }
-    .cart-header h2 { font-size: 0.85rem; }
-    .cart-items { padding: 5px 8px; gap: 4px; }
-    .cart-item { padding: 5px 7px; }
-    .cart-item-name { font-size: 0.74rem; }
-    .cart-item-price { font-size: 0.67rem; }
-    .qty-btn { width:22px; height:22px; font-size:0.88rem; }
-    .qty-num { font-size:0.82rem; }
-    .cart-empty { padding: 16px 12px; font-size: 0.78rem; }
-    .cart-empty-icon { font-size: 1.8rem; }
-
-    .cart-footer { padding: 8px 12px; }
-    .total-amount { font-size: 1.3rem; }
-    .total-label { font-size: 0.78rem; }
-    .btn-pay { padding: 12px; font-size: 0.9rem; }
-
-    .modal { width: 96%; padding: 20px 16px; border-radius: 20px; }
-    .modal h2 { font-size: 1.05rem; }
-    .modal-total { font-size: 1.8rem; }
-    .pay-method-btn { padding: 13px 6px; font-size: 0.88rem; }
-    .pay-method-icon { font-size: 1.6rem; }
-    .qr-wrap { width: 150px; height: 150px; }
-  }
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="/css/customer.css">
+  <title>ご注文</title>
 </head>
+
 <body>
-<div id="connecting"><div class="spinner"></div><p>接続中...</p></div>
-
-<header>
-  <div class="logo-wrap" id="logo-wrap"><div class="logo-placeholder">🎪</div></div>
-  <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
-  <h1 id="store-name">読み込み中...</h1>
-  <div class="store-badge" id="store-badge">--</div>
-</header>
-
-<div id="over-banner" class="over-banner" style="display:none;">⚡ 現在予定売り上げ数を突破！</div>
-<div class="main">
-  <div class="products-area" id="products-area">
-    <div style="color:#ccc;text-align:center;padding:40px;grid-column:1/-1">読み込み中...</div>
+  <div id="connecting">
+    <div class="spinner"></div>
+    <p>接続中...</p>
   </div>
-  <div class="cart-sidebar">
-    <div class="cart-header"><h2>🛒 カート</h2><div class="cart-count" id="cart-count">0</div></div>
-    <div class="cart-items" id="cart-items"><div class="cart-empty"><span class="cart-empty-icon">🛍️</span>商品を選んでください</div></div>
-    <div class="cart-footer">
-      <div class="total-row"><span class="total-label">合計</span><span class="total-amount"><span>¥</span><span id="total-display">0</span></span></div>
-      <button class="btn-pay" id="btn-pay" disabled>決済へ進む →</button>
+
+  <header>
+    <div class="logo-wrap" id="logo-wrap">
+      <div class="logo-placeholder">🎪</div>
     </div>
-  </div>
-</div>
+    <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
+    <h1 id="store-name">読み込み中...</h1>
+    <div class="store-badge" id="store-badge">--</div>
+  </header>
 
-<!-- 決済モーダル -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
-    <div id="method-select-screen">
-      <h2>💳 お支払い方法</h2>
-      <div class="modal-total"><span>¥</span><span id="modal-total">0</span></div>
-      <div class="pay-method-btns">
-        <button class="pay-method-btn cash" onclick="selectPayment('cash')"><span class="pay-method-icon">💴</span>現金</button>
-        <button class="pay-method-btn paypay" onclick="selectPayment('paypay')"><span class="pay-method-icon">📱</span>PayPay</button>
+  <div id="over-banner" class="over-banner" style="display:none;">⚡ 現在予定売り上げ数を突破！</div>
+  <div class="main">
+    <div class="products-area" id="products-area">
+      <div style="color:#ccc;text-align:center;padding:40px;grid-column:1/-1">読み込み中...</div>
+    </div>
+    <div class="cart-sidebar">
+      <div class="cart-header">
+        <h2>🛒 カート</h2>
+        <div class="cart-count" id="cart-count">0</div>
       </div>
-      <button class="btn-cancel-modal" onclick="cancelPayment()">← カートに戻る</button>
+      <div class="cart-items" id="cart-items">
+        <div class="cart-empty"><span class="cart-empty-icon">🛍️</span>商品を選んでください</div>
+      </div>
+      <div class="cart-footer">
+        <div class="total-row"><span class="total-label">合計</span><span class="total-amount"><span>¥</span><span
+              id="total-display">0</span></span></div>
+        <button class="btn-pay" id="btn-pay" disabled>決済へ進む →</button>
+      </div>
     </div>
-    <div id="paypay-screen" class="qr-screen">
-      <h2>📱 PayPayで送金</h2>
-      <div class="qr-amount">¥<span id="qr-amount">0</span></div>
-      <div class="qr-wrap" id="qr-wrap">
-        <img id="qr-img" style="width:100%;height:100%;object-fit:contain;display:none;" alt="PayPay QR">
-        <div id="qr-fallback" style="display:none;font-size:0.75rem;color:#999;text-align:center;padding:10px;line-height:1.6;">
-          QR画像を<br>読み込み中...
+  </div>
+
+  <!-- 決済モーダル -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div id="method-select-screen">
+        <h2>💳 お支払い方法</h2>
+        <div class="modal-total"><span>¥</span><span id="modal-total">0</span></div>
+        <div class="pay-method-btns">
+          <button class="pay-method-btn cash" onclick="selectPayment('cash')"><span
+              class="pay-method-icon">💴</span>現金</button>
+          <button class="pay-method-btn paypay" onclick="selectPayment('paypay')"><span
+              class="pay-method-icon">📱</span>PayPay</button>
         </div>
+        <button class="btn-cancel-modal" onclick="cancelPayment()">← カートに戻る</button>
       </div>
-      <p class="qr-note">
-        PayPayカメラでQRを読み取り<br>
-        <strong id="qr-amount2">0</strong>円を送金してください
-      </p>
-      <div id="qr-warn" style="display:none;margin-top:8px;padding:8px 12px;background:#FFF5F5;border-radius:10px;font-size:0.72rem;color:#C0392B;line-height:1.5;"></div>
-      <button class="btn-cancel-modal" onclick="cancelPayment()">← キャンセル</button>
-    </div>
-    <div id="cash-screen" class="cash-screen">
-      <span class="cash-icon">💴</span>
-      <h2>現金でのお支払い</h2>
-      <div class="cash-amount">¥<span id="cash-amount">0</span></div>
-      <p>店員にお支払いください。<br>店員が確認後、完了します。</p>
-      <button class="btn-cancel-modal" onclick="cancelPayment()">← キャンセル</button>
+      <div id="paypay-screen" class="qr-screen">
+        <h2>📱 PayPayで送金</h2>
+        <div class="qr-amount">¥<span id="qr-amount">0</span></div>
+        <div class="qr-wrap" id="qr-wrap">
+          <img id="qr-img" style="width:100%;height:100%;object-fit:contain;display:none;" alt="PayPay QR">
+          <div id="qr-fallback"
+            style="display:none;font-size:0.75rem;color:#999;text-align:center;padding:10px;line-height:1.6;">
+            QR画像を<br>読み込み中...
+          </div>
+        </div>
+        <p class="qr-note">
+          PayPayカメラでQRを読み取り<br>
+          <strong id="qr-amount2">0</strong>円を送金してください
+        </p>
+        <div id="qr-warn"
+          style="display:none;margin-top:8px;padding:8px 12px;background:#FFF5F5;border-radius:10px;font-size:0.72rem;color:#C0392B;line-height:1.5;">
+        </div>
+        <button class="btn-cancel-modal" onclick="cancelPayment()">← キャンセル</button>
+      </div>
+      <div id="cash-screen" class="cash-screen">
+        <span class="cash-icon">💴</span>
+        <h2>現金でのお支払い</h2>
+        <div class="cash-amount">¥<span id="cash-amount">0</span></div>
+        <p>店員にお支払いください。<br>店員が確認後、完了します。</p>
+        <button class="btn-cancel-modal" onclick="cancelPayment()">← キャンセル</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="done-overlay" id="done-overlay">
-  <div class="done-icon">✅</div>
-  <div class="done-text">ありがとうございました！</div>
-  <div class="done-sub">またのご来店をお待ちしています</div>
-</div>
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-icon">✅</div>
+    <div class="done-text">ありがとうございました！</div>
+    <div class="done-sub">またのご来店をお待ちしています</div>
+  </div>
 
 
-<script>
-const params = new URLSearchParams(location.search);
-const STORE_ID = params.get('store') || 'store1';
-const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-
-let cart = {}, products = [], ws, pendingPayment = null, isWaiting = false, paypayUrl = null, lastLogoUrl = undefined, currentStore = null;
-
-// QRコードは事前生成PNG画像を使用（generate_qr.js参照）
-
-// ── WebSocket ─────────────────────────────────────────────────
-function updateDayBadge(day) {
-  const el = document.getElementById('day-badge-hdr');
-  if (!el) return;
-  el.textContent = day === 2 ? '2日目' : '1日目';
-  el.className = 'day-badge-hdr ' + (day === 2 ? 'day2' : 'day1');
-}
-
-function connect() {
-  ws = new WebSocket(WS_URL);
-  ws.onopen = () => ws.send(JSON.stringify({ type:'REGISTER', role:'customer', storeId:STORE_ID }));
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'REGISTERED') { document.getElementById('connecting').style.display = 'none'; if (msg.currentDay) updateDayBadge(msg.currentDay); }
-    if (msg.type === 'STORE_STATE') updateState(msg.store);
-    if (msg.type === 'DAY_STATE') { updateDayBadge(msg.currentDay); }
-    if (msg.type === 'ERROR') alert('エラー: ' + msg.message);
-  };
-  ws.onclose = () => { document.getElementById('connecting').style.display = 'flex'; setTimeout(connect, 2000); };
-}
-
-function updateState(store) {
-  currentStore = store
-  document.getElementById('store-name').textContent = store.name;
-  document.getElementById('store-badge').textContent = STORE_ID;
-  paypayUrl = store.paypayUrl || null;
-
-  // テーマ適用
-  const themes = ['orange','red','blue','green','purple','dark'];
-  document.body.classList.remove(...themes.map(t => 'theme-' + t));
-  document.body.classList.add('theme-' + (store.theme || 'orange'));
-
-  // ロゴ（画像URLが変わらない限り再構築しない＝再読み込み防止）
-  if (store.logo !== lastLogoUrl) {
-    lastLogoUrl = store.logo;
-    const wrap = document.getElementById('logo-wrap');
-    if (store.logo) {
-      const img = document.createElement('img');
-      img.className = 'logo-img';
-      img.src = store.logo;
-      img.onerror = () => { wrap.innerHTML = '<div class="logo-placeholder">🎪</div>'; };
-      wrap.innerHTML = '';
-      wrap.appendChild(img);
-    } else {
-      wrap.innerHTML = '<div class="logo-placeholder">🎪</div>';
-    }
-  }
-
-  products = store.products;
-  // バナー表示制御
-  const isCountUpMode = !!store.countUpMode;
-  const hasOver = (products || []).some(p => p.overStock);
-  const hasBurst = isCountUpMode && (products || []).some(p => p.sold >= p.stock);
-  const banner = document.getElementById('over-banner');
-  if (banner) {
-    if (hasBurst) {
-      banner.textContent = '⚡ 現在予想売り上げ数を突破中！';
-      banner.style.display = 'block';
-    } else if (hasOver) {
-      banner.textContent = '⚡ 現在予定売り上げ数を突破！';
-      banner.style.display = 'block';
-    } else {
-      banner.style.display = 'none';
-    }
-  }
-  const prev = pendingPayment;
-  pendingPayment = store.pendingPayment;
-  if (isWaiting && prev && !pendingPayment) { showDone(); return; }
-  renderProducts();
-}
-
-// ── 商品描画 ──────────────────────────────────────────────────
-// 方針: <img>タグは初回構築時に1回だけ作る。以降は在庫・カート数のテキスト/クラスだけを
-// 差分更新することで、購入操作のたびに画像が再読み込みされる問題を防ぐ。
-const ICONS = ['🍔','🍕','🍜','🍱','🍰','🥤','🍡','🍪','🌮','🍣','🍦','🥞'];
-let productCardEls = {}; // productId -> { card, badge, stockEl }
-let builtProductSignature = null; // 商品リストの構成（id+image+name+price）が変わったかを検知
-
-function productSignature(list) {
-  return list.map(p => p.id + '|' + (p.image||'') + '|' + p.name + '|' + p.price).join('::');
-}
-
-function renderProducts() {
-  const area = document.getElementById('products-area');
-
-  if (!products.length) {
-    area.innerHTML = '<div style="color:#ccc;text-align:center;padding:40px;grid-column:1/-1">商品がありません</div>';
-    productCardEls = {}; builtProductSignature = null;
-    return;
-  }
-
-  const sig = productSignature(products);
-
-  // 商品構成（画像・名前・価格・並び順）が変わった場合のみ全体を再構築
-  if (sig !== builtProductSignature) {
-    area.innerHTML = '';
-    productCardEls = {};
-
-    products.forEach((p, i) => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.onclick = () => addToCart(p.id);
-
-      const badge = document.createElement('div');
-      badge.className = 'cart-badge';
-      badge.textContent = '0';
-
-      let imgEl;
-      if (p.image) {
-        imgEl = document.createElement('img');
-        imgEl.className = 'product-img';
-        imgEl.loading = 'lazy';
-        imgEl.src = p.image;
-        imgEl.onerror = () => {
-          const ph = document.createElement('div');
-          ph.className = 'product-img-placeholder';
-          ph.textContent = ICONS[i % ICONS.length];
-          imgEl.replaceWith(ph);
-        };
-      } else {
-        imgEl = document.createElement('div');
-        imgEl.className = 'product-img-placeholder';
-        imgEl.textContent = ICONS[i % ICONS.length];
-      }
-
-      const info = document.createElement('div');
-      info.className = 'product-info';
-
-      const nameEl = document.createElement('div');
-      nameEl.className = 'product-name';
-      nameEl.textContent = p.name;
-
-      const priceEl = document.createElement('div');
-      priceEl.className = 'product-price';
-      priceEl.innerHTML = '<span>¥</span>' + p.price.toLocaleString();
-
-      const stockEl = document.createElement('div');
-      stockEl.className = 'product-stock';
-
-      info.appendChild(nameEl);
-      info.appendChild(priceEl);
-      info.appendChild(stockEl);
-
-      card.appendChild(badge);
-      card.appendChild(imgEl);
-      card.appendChild(info);
-      area.appendChild(card);
-
-      productCardEls[p.id] = { card, badge, stockEl };
-    });
-
-    builtProductSignature = sig;
-  }
-
-  // 在庫・カート状態の差分更新（画像には触れない）
-  products.forEach(p => {
-    const els = productCardEls[p.id];
-    if (!els) return;
-    const isOver = !!p.overStock;
-    const isCU = !!currentStore.countUpMode;
-    const inCart = cart[p.id] && cart[p.id].qty > 0;
-    const qty = inCart ? cart[p.id].qty : 0;
-    const oos = !isOver && !isCU && p.stock <= 0;
-    const low = !isOver && !isCU && p.stock > 0 && p.stock <= 5;
-    const cuBurst = isCU && (p.sold || 0) >= p.stock; // カウントアップで目標超過
-
-    els.card.classList.toggle('in-cart', !!inCart);
-    els.card.classList.toggle('out-of-stock', oos);
-    els.card.onclick = oos ? null : () => addToCart(p.id);
-
-    els.badge.textContent = qty;
-    els.badge.classList.toggle('visible', !!inCart);
-
-    if (isCU) {
-      // カウントアップモード: 売れた数/目標数を表示
-      els.stockEl.textContent = cuBurst ? ('目標達成+' + ((p.sold||0) - p.stock) + '個') : ('販売中 ' + (p.sold||0) + '/' + p.stock + '個');
-      els.stockEl.className = 'product-stock' + (cuBurst ? ' over-mode' : '');
-    } else if (isOver) {
-      els.stockEl.textContent = '⚡ 突破中';
-      els.stockEl.className = 'product-stock over-mode';
-    } else {
-      els.stockEl.textContent = oos ? '売切れ' : (low ? '残り' + p.stock + '個' : '残' + p.stock + '個');
-      els.stockEl.classList.toggle('low', low);
-    }
-  });
-}
-
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function addToCart(id) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  const isCU = currentStore && currentStore.countUpMode;
-  if (!p.overStock && !isCU && p.stock <= 0) return;
-  if (!p.overStock && !isCU && cart[id] && cart[id].qty >= p.stock) { alert('在庫以上は追加できません'); return; }
-  if (!cart[id]) cart[id] = { name: p.name, price: p.price, qty: 0 };
-  cart[id].qty++;
-  renderCart(); renderProducts();
-}
-
-function changeQty(id, delta) {
-  if (!cart[id]) return;
-  cart[id].qty += delta;
-  if (cart[id].qty <= 0) delete cart[id];
-  renderCart(); renderProducts();
-}
-
-function renderCart() {
-  const items = Object.entries(cart);
-  const total = items.reduce((s,[,v]) => s + v.price*v.qty, 0);
-  const count = items.reduce((s,[,v]) => s + v.qty, 0);
-  document.getElementById('cart-count').textContent = count;
-  document.getElementById('total-display').textContent = total.toLocaleString();
-  document.getElementById('btn-pay').disabled = items.length === 0;
-  const container = document.getElementById('cart-items');
-  if (!items.length) { container.innerHTML = '<div class="cart-empty"><span class="cart-empty-icon">🛍️</span>商品を選んでください</div>'; return; }
-  container.innerHTML = items.map(([id,item]) =>
-    '<div class="cart-item">' +
-    '<div><div class="cart-item-name">' + escHtml(item.name) + '</div>' +
-    '<div class="cart-item-price">¥' + item.price + ' × ' + item.qty + ' = ¥' + (item.price*item.qty).toLocaleString() + '</div></div>' +
-    '<div class="qty-controls">' +
-    '<button class="qty-btn minus" onclick="changeQty(' + id + ',-1)">−</button>' +
-    '<span class="qty-num">' + item.qty + '</span>' +
-    '<button class="qty-btn" onclick="changeQty(' + id + ',1)">＋</button>' +
-    '</div></div>'
-  ).join('');
-}
-
-function openPayModal() {
-  const total = Object.entries(cart).reduce((s,[,v]) => s + v.price*v.qty, 0);
-  document.getElementById('modal-total').textContent = total.toLocaleString();
-  showScreen('method');
-  document.getElementById('modal-overlay').classList.add('visible');
-}
-
-function selectPayment(method) {
-  const items = Object.entries(cart).map(([id,v]) => ({ id:parseInt(id), name:v.name, price:v.price, qty:v.qty }));
-  const total = items.reduce((s,i) => s+i.price*i.qty, 0);
-  ws.send(JSON.stringify({ type:'SELECT_PAYMENT', storeId:STORE_ID, items, method }));
-  isWaiting = true;
-
-  if (method === 'paypay') {
-    document.getElementById('qr-amount').textContent = total.toLocaleString();
-    document.getElementById('qr-amount2').textContent = total.toLocaleString();
-
-    const img = document.getElementById('qr-img');
-    const fallback = document.getElementById('qr-fallback');
-    const warn = document.getElementById('qr-warn');
-
-    // 金額に関係なく常に同じQR画像を表示（客が金額を手入力して送金する運用）
-    img.style.display = 'none';
-    fallback.style.display = 'block';
-    fallback.textContent = 'QR読み込み中...';
-    warn.style.display = 'none';
-
-    const qrUrl = '/data/qr/' + STORE_ID + '.png';
-    img.onload = () => {
-      fallback.style.display = 'none';
-      img.style.display = 'block';
-      warn.style.display = 'none';
-    };
-    img.onerror = () => {
-      fallback.style.display = 'block';
-      fallback.textContent = 'QR未設定\nQRコード生成.bat を\n実行してください';
-      img.style.display = 'none';
-      warn.style.display = 'block';
-      warn.textContent = '⚠️ QR画像が見つかりません。\n管理画面でPayPay URLを設定後、\nQRコード生成.bat を実行してください。';
-    };
-    img.src = qrUrl + '?t=' + Date.now(); // キャッシュ防止
-
-    showScreen('paypay');
-  } else {
-    document.getElementById('cash-amount').textContent = total.toLocaleString();
-    showScreen('cash');
-  }
-}
-
-function showScreen(name) {
-  document.getElementById('method-select-screen').style.display = name==='method'?'':'none';
-  document.getElementById('paypay-screen').className = 'qr-screen'+(name==='paypay'?' active':'');
-  document.getElementById('cash-screen').className = 'cash-screen'+(name==='cash'?' active':'');
-}
-
-function cancelPayment() {
-  ws.send(JSON.stringify({ type:'CANCEL_PAYMENT', storeId:STORE_ID }));
-  isWaiting = false;
-  document.getElementById('modal-overlay').classList.remove('visible');
-}
-
-function showDone() {
-  isWaiting = false; cart = {};
-  document.getElementById('modal-overlay').classList.remove('visible');
-  document.getElementById('done-overlay').classList.add('visible');
-  renderCart(); renderProducts();
-  setTimeout(() => document.getElementById('done-overlay').classList.remove('visible'), 3000);
-}
-
-document.getElementById('btn-pay').addEventListener('click', openPayModal);
-connect();
-</script>
+  <script src="/js/customer.js"></script>
 </body>
+
 </html>

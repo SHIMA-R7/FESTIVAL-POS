@@ -1,816 +1,225 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>管理画面 - 学校祭POS</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap');
-  :root{--bg:#F4F6FA;--surface:#fff;--primary:#3B4CCA;--primary-light:#EEF0FF;--accent:#FF6B35;--green:#06B777;--red:#E53E3E;--text:#1A202C;--text-muted:#718096;--border:#E2E8F0;--shadow:0 2px 12px rgba(0,0,0,0.08);--radius:14px;}
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);font-family:'Noto Sans JP',sans-serif;color:var(--text);min-height:100vh;}
-  header{background:var(--primary);color:white;padding:16px 28px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(59,76,202,0.4);}
-  header h1{font-size:1.2rem;font-weight:700;flex:1;}
-  .admin-badge{background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;}
-  .container{max-width:1100px;margin:0 auto;padding:24px 16px;display:grid;gap:20px;}
-  .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
-  .card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-  .card-header h2{font-size:0.95rem;font-weight:700;}
-  .card-body{padding:18px 20px;}
-  .row{display:flex;gap:10px;flex-wrap:wrap;}
-  .input{flex:1;min-width:140px;padding:9px 13px;border:2px solid var(--border);border-radius:10px;font-size:0.92rem;font-family:inherit;outline:none;transition:border-color 0.15s;color:var(--text);background:white;}
-  .input:focus{border-color:var(--primary);}
-  .btn{padding:9px 18px;border-radius:10px;border:none;font-family:inherit;font-weight:700;cursor:pointer;font-size:0.88rem;transition:transform 0.1s;}
-  .btn:active{transform:scale(0.97);}
-  .btn-primary{background:var(--primary);color:white;}
-  .btn-danger{background:var(--red);color:white;}
-  .btn-sm{padding:5px 11px;font-size:0.8rem;}
-  .btn-ghost{background:var(--bg);color:var(--text-muted);border:1px solid var(--border);}
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/admin.css">
+  <title>管理画面 - 学校祭POS</title>
 
-  .store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
-  .store-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color 0.2s;}
-  .store-card:hover{border-color:var(--primary);}
-  .sc-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
-  .sc-icon{width:38px;height:38px;background:var(--primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
-  .sc-title h3{font-size:0.95rem;font-weight:700;}
-  .sc-id{font-size:0.72rem;color:var(--text-muted);}
-  .sc-links{display:flex;gap:6px;flex-wrap:wrap;}
-  .link-btn{padding:5px 11px;border-radius:8px;font-size:0.76rem;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:3px;}
-  .link-customer{background:#FFF0E8;color:var(--accent);}
-  .link-staff{background:#EEF0FF;color:var(--primary);}
-  .link-copy{background:var(--bg);color:var(--text-muted);border:1px solid var(--border);}
-  .link-backyard{background:#F0FFF4;color:#276749;}
-
-  .product-editor-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
-  .product-editor-table th{text-align:left;padding:7px 8px;font-size:0.74rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);border-bottom:2px solid var(--border);}
-  .product-editor-table td{padding:8px 6px;border-bottom:1px solid var(--border);vertical-align:middle;}
-  .product-editor-table tr:last-child td{border-bottom:none;}
-  .product-editor-table input[type=text],.product-editor-table input[type=number]{padding:6px 9px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.88rem;width:100%;outline:none;}
-  .product-editor-table input:focus{border-color:var(--primary);}
-
-  .img-upload-cell{display:flex;align-items:center;gap:8px;}
-  .product-thumb{width:44px;height:44px;object-fit:cover;border-radius:8px;background:#f0f0f0;flex-shrink:0;}
-  .product-thumb-placeholder{width:44px;height:44px;border-radius:8px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
-  .img-upload-btn{padding:5px 10px;border-radius:8px;border:1px dashed var(--border);background:var(--bg);cursor:pointer;font-size:0.76rem;color:var(--text-muted);font-family:inherit;white-space:nowrap;}
-  .img-upload-btn:hover{border-color:var(--primary);color:var(--primary);}
-  input[type=file]{display:none;}
-
-  .logo-upload-area{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
-  .logo-preview{width:100px;height:100px;object-fit:contain;border-radius:14px;background:#f0f0f0;border:2px solid var(--border);}
-  .logo-preview-placeholder{width:100px;height:100px;border-radius:14px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:3rem;border:2px solid var(--border);}
-
-  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
-  .summary-card{background:var(--primary-light);border-radius:11px;padding:14px;text-align:center;}
-  .s-label{font-size:0.72rem;color:var(--primary);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:4px;}
-  .s-value{font-family:'Oswald',sans-serif;font-size:1.7rem;color:var(--primary);}
-  .sales-table{width:100%;border-collapse:collapse;font-size:0.84rem;}
-  .sales-table th{text-align:left;padding:7px 9px;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);border-bottom:2px solid var(--border);}
-  .sales-table td{padding:8px 9px;border-bottom:1px solid var(--border);}
-  .sales-table tr:last-child td{border-bottom:none;}
-  .method-tag{padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;}
-  .method-paypay{background:#FFE8E8;color:var(--red);}
-  .method-cash{background:#E8FFF5;color:var(--green);}
-  .empty-state{text-align:center;padding:36px;color:var(--text-muted);}
-  .section-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-
-  /* PayPay設定 */
-  .paypay-info{background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:14px 16px;font-size:0.85rem;line-height:1.7;color:#742A2A;}
-  .paypay-info strong{color:#C53030;}
-  .paypay-form{display:grid;gap:10px;margin-top:14px;}
-  .paypay-form label{font-size:0.82rem;font-weight:700;color:var(--text-muted);}
-  .paypay-form .input{flex:none;width:100%;}
-
-  /* 日切替トグル */
-  .day-toggle-wrap{display:flex;align-items:center;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#EEF0FF,#F4F6FA);border-radius:12px;border:2px solid var(--primary);margin-bottom:4px;}
-  .day-label{font-size:1rem;font-weight:700;color:var(--primary);}
-  .day-badge{padding:4px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;}
-  .day-badge.day1{background:#3B4CCA;color:white;}
-  .day-badge.day2{background:#E53E3E;color:white;}
-  .toggle-switch{position:relative;width:64px;height:32px;flex-shrink:0;}
-  .toggle-switch input{opacity:0;width:0;height:0;}
-  .toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:32px;cursor:pointer;transition:0.3s;}
-  .toggle-slider:before{content:"";position:absolute;width:26px;height:26px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
-  input:checked + .toggle-slider{background:var(--red);}
-  input:checked + .toggle-slider:before{transform:translateX(32px);}
-  .day-desc{font-size:0.78rem;color:var(--text-muted);flex:1;}
-
-  /* 在庫リセット */
-  .reset-card-body{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-  .reset-select{padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:0.82rem;min-width:160px;}
-  .btn-reset{padding:9px 18px;background:#FFF5F5;color:var(--red);border:2px solid #FEB2B2;border-radius:10px;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
-  .btn-reset:hover{background:var(--red);color:white;}
-
-  /* 日切替ダイアログ */
-  .day-dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:500;display:none;}
-  .day-dialog-overlay.visible{display:flex;}
-  .day-dialog{background:white;border-radius:20px;padding:32px 28px;width:90%;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
-  .day-dialog-icon{font-size:3rem;margin-bottom:12px;}
-  .day-dialog h3{font-size:1.2rem;font-weight:700;margin-bottom:10px;}
-  .day-dialog p{font-size:0.88rem;color:var(--text-muted);line-height:1.7;margin-bottom:20px;}
-  .day-dialog-warn{background:#FFF5F5;border:1px solid #FEB2B2;border-radius:10px;padding:12px;font-size:0.83rem;color:#C53030;margin-bottom:20px;text-align:left;}
-  .day-dialog-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .day-dialog-btns button{padding:12px;border-radius:12px;border:none;font-family:inherit;font-weight:700;font-size:0.95rem;cursor:pointer;}
-  .btn-day-cancel{background:var(--bg);color:var(--text-muted);border:1px solid var(--border)!important;}
-  .btn-day-confirm{background:var(--primary);color:white;}
-  .btn-day-confirm.to-day2{background:var(--red);}
-
-  .toast{position:fixed;bottom:20px;right:20px;background:#1A202C;color:white;padding:11px 18px;border-radius:11px;font-size:0.88rem;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.25);}
-  .toast.show{transform:none;opacity:1;}
-  /* ── パスワードログイン画面 ── */
-  .login-gate{position:fixed;inset:0;background:linear-gradient(135deg,#1A1A2E,#16213E);display:flex;align-items:center;justify-content:center;z-index:1000;}
-  .login-box{background:white;border-radius:24px;padding:40px 36px;width:90%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-  .login-icon{font-size:3rem;margin-bottom:10px;}
-  .login-box h2{font-size:1.3rem;font-weight:700;margin-bottom:6px;color:var(--text);}
-  .login-box p{font-size:0.85rem;color:var(--text-muted);margin-bottom:20px;}
-  .login-input{width:100%;padding:14px 16px;font-size:1.1rem;border:2px solid var(--border);border-radius:12px;font-family:inherit;text-align:center;letter-spacing:0.1em;margin-bottom:10px;}
-  .login-input:focus{outline:none;border-color:var(--primary);}
-  .login-error{display:none;color:var(--red);font-size:0.82rem;margin-bottom:10px;}
-  .login-btn{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:12px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;}
-  .login-btn:active{transform:scale(0.98);}
-</style>
 </head>
+
 <body>
 
-<!-- パスワードログイン画面 -->
-<div id="login-gate" class="login-gate">
-  <div class="login-box">
-    <div class="login-icon">🔒</div>
-    <h2>管理画面ログイン</h2>
-    <p>パスワードを入力してください</p>
-    <input type="password" id="login-pw-input" class="login-input" placeholder="パスワード" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitLogin()">
-    <div id="login-error" class="login-error">パスワードが違います</div>
-    <button class="login-btn" onclick="submitLogin()">ログイン</button>
-  </div>
-</div>
-
-<div id="admin-app" style="display:none;">
-<header>
-  <div class="admin-badge">ADMIN</div>
-  <h1>🎪 学校祭POSシステム — 管理画面</h1>
-  <div id="header-day-badge" class="day-badge day1">1日目</div>
-  <a href="/admin/log" style="padding:7px 14px;background:#EEF0FF;color:#3B4CCA;border-radius:10px;font-size:0.82rem;font-weight:700;text-decoration:none;white-space:nowrap;">📋 売上ログ</a>
-</header>
-
-<div class="container">
-
-  <!-- 出店作成 -->
-  <div class="card">
-    <div class="card-header"><h2>➕ 出店の作成</h2></div>
-    <div class="card-body">
-      <div class="row">
-        <input class="input" id="new-store-id" placeholder="出店ID（英数字 例: takoyaki）" maxlength="20">
-        <input class="input" id="new-store-name" placeholder="出店名（例: たこ焼き屋）" maxlength="30">
-        <button class="btn btn-primary" onclick="createStore()">作成する</button>
-      </div>
+  <!-- パスワードログイン画面 -->
+  <div id="login-gate" class="login-gate">
+    <div class="login-box">
+      <div class="login-icon">🔒</div>
+      <h2>管理画面ログイン</h2>
+      <p>パスワードを入力してください</p>
+      <input type="password" id="login-pw-input" class="login-input" placeholder="パスワード" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')submitLogin()">
+      <div id="login-error" class="login-error">パスワードが違います</div>
+      <button class="login-btn" onclick="submitLogin()">ログイン</button>
     </div>
   </div>
 
-  <!-- 日切替 -->
-  <div class="card">
-    <div class="card-header"><h2>📅 開催日の切り替え</h2></div>
-    <div class="card-body">
-      <div class="day-toggle-wrap">
-        <div class="day-label">現在:</div>
-        <div id="current-day-badge" class="day-badge day1">1日目</div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="day-toggle-input" onchange="onDayToggleChange(this)">
-          <span class="toggle-slider"></span>
-        </label>
-        <div class="day-badge day2">2日目</div>
-        <div class="day-desc">切り替えると全端末に即座に反映されます。<br>在庫・商品・売上データはそれぞれ独立しています。</div>
-      </div>
-    </div>
-  </div>
+  <div id="admin-app" style="display:none;">
+    <header>
+      <div class="admin-badge">ADMIN</div>
+      <h1>🎪 学校祭POSシステム — 管理画面</h1>
+      <div id="header-day-badge" class="day-badge day1">1日目</div>
+      <a href="/admin/log"
+        style="padding:7px 14px;background:#EEF0FF;color:#3B4CCA;border-radius:10px;font-size:0.82rem;font-weight:700;text-decoration:none;white-space:nowrap;">📋
+        売上ログ</a>
+    </header>
 
-  <!-- 在庫リセット -->
-  <div class="card">
-    <div class="card-header"><h2>🔄 在庫リセット</h2></div>
-    <div class="card-body">
-      <div class="reset-card-body">
-        <select class="reset-select" id="reset-store-sel">
-          <option value="">全出店</option>
-        </select>
-        <select class="reset-select" id="reset-day-sel">
-          <option value="1">1日目の在庫</option>
-          <option value="2">2日目の在庫</option>
-          <option value="both">両日の在庫</option>
-        </select>
-        <button class="btn-reset" onclick="confirmResetStock()">🔄 初期値に戻す</button>
-        <span style="font-size:0.78rem;color:var(--text-muted);">※売上データも同時にリセットされます</span>
-      </div>
-    </div>
-  </div>
+    <div class="container">
 
-  <!-- 出店一覧 -->
-  <div class="card">
-    <div class="card-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <h2 style="flex:1">🏪 出店一覧</h2>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:0.75rem;color:var(--text-muted);">ソート:</span>
-        <button class="btn btn-ghost btn-sm" onclick="sortStores('id')" id="sort-id">ID順</button>
-        <button class="btn btn-ghost btn-sm" onclick="sortStores('name')" id="sort-name">名前順</button>
-        <button class="btn btn-primary btn-sm" onclick="exportAllUrls()">📥 全URL JSON出力</button>
-      </div>
-    </div>
-    <div class="card-body"><div class="store-grid" id="store-grid"><div class="empty-state">出店がありません</div></div></div>
-  </div>
-
-  <!-- ロゴ管理 -->
-  <div class="card">
-    <div class="card-header">
-      <h2>🖼️ ロゴ管理（客画面左上に表示）</h2>
-      <div class="section-bar">
-        <select class="input" id="logo-store-select" style="min-width:180px;flex:none;">
-          <option value="">出店を選択...</option>
-        </select>
-        <button class="btn btn-primary btn-sm" onclick="loadLogoEditor()">読み込む</button>
-      </div>
-    </div>
-    <div class="card-body"><div id="logo-editor"><div class="empty-state">出店を選択してください</div></div></div>
-  </div>
-
-  <!-- 商品管理 -->
-  <div class="card">
-    <div class="card-header">
-      <h2>📦 商品管理</h2>
-      <div class="section-bar">
-        <select class="input" id="product-store-select" style="min-width:180px;flex:none;">
-          <option value="">出店を選択...</option>
-        </select>
-        <button class="btn btn-primary btn-sm" onclick="loadProductEditor()">読み込む</button>
-        <button class="btn btn-primary btn-sm" onclick="saveProducts()">💾 保存</button>
-        <button class="btn btn-ghost btn-sm" onclick="addProduct()">＋ 商品追加</button>
-      </div>
-    </div>
-    <div class="card-body"><div id="product-editor"><div class="empty-state">出店を選択してください</div></div></div>
-  </div>
-
-  <!-- PayPay設定 -->
-  <div class="card">
-    <div class="card-header"><h2>📱 PayPay設定</h2></div>
-    <div class="card-body">
-      <div class="paypay-info">
-        <strong>⚠️ PayPay Open Payment APIについて</strong><br>
-        PayPay Open Payment APIは<strong>法人契約・事前審査が必要</strong>なため、学校祭での個人利用はできません。<br>
-        代わりに、以下の方法で実用的なQR決済が可能です：<br><br>
-        <strong>【推奨】PayPay個人送金QR方式</strong><br>
-        ① PayPayアプリ →「受け取る」→「リンクを作成」でURLを取得<br>
-        ② 下の欄にそのURLを入力して保存<br>
-        ③ 客画面で金額入りメッセージ付きのQRが表示されます（送金額は客が手入力）<br><br>
-        ※ 金額の確認は客のPayPay送金完了画面を店員が目視確認してください。
-      </div>
-      <div class="paypay-form">
-        <div>
-          <label>出店選択</label>
-          <select class="input" id="paypay-store-select" style="width:auto;min-width:200px;flex:none;">
-            <option value="">出店を選択...</option>
-          </select>
+      <!-- 出店作成 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>➕ 出店の作成</h2>
         </div>
-        <div>
-          <label>PayPay受け取りURL（例: https://qr.paypay.ne.jp/xxxxxx）</label>
-          <input class="input" id="paypay-url" placeholder="PayPayアプリの「受け取る→リンク作成」で取得したURL">
-        </div>
-        <div>
-          <button class="btn btn-primary btn-sm" onclick="savePaypayUrl()">保存</button>
+        <div class="card-body">
+          <div class="row">
+            <input class="input" id="new-store-id" placeholder="出店ID（英数字 例: takoyaki）" maxlength="20">
+            <input class="input" id="new-store-name" placeholder="出店名（例: たこ焼き屋）" maxlength="30">
+            <button class="btn btn-primary" onclick="createStore()">作成する</button>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- 売上データ -->
-  <div class="card">
-    <div class="card-header">
-      <h2>📊 売上データ</h2>
-      <div class="section-bar">
-        <select class="input" id="sales-store-select" style="min-width:180px;flex:none;">
-          <option value="">出店を選択...</option>
-        </select>
-        <button class="btn btn-ghost btn-sm" onclick="setSalesDay(1)" id="sales-day1-btn" style="font-weight:900">1日目</button>
-        <button class="btn btn-ghost btn-sm" onclick="setSalesDay(2)" id="sales-day2-btn">2日目</button>
-        <button class="btn btn-primary btn-sm" onclick="loadSales()">読み込む</button>
-        <button class="btn btn-danger btn-sm" onclick="resetSales()">🗑️ リセット</button>
+      <!-- 日切替 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📅 開催日の切り替え</h2>
+        </div>
+        <div class="card-body">
+          <div class="day-toggle-wrap">
+            <div class="day-label">現在:</div>
+            <div id="current-day-badge" class="day-badge day1">1日目</div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="day-toggle-input" onchange="onDayToggleChange(this)">
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="day-badge day2">2日目</div>
+            <div class="day-desc">切り替えると全端末に即座に反映されます。<br>在庫・商品・売上データはそれぞれ独立しています。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 在庫リセット -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🔄 在庫リセット</h2>
+        </div>
+        <div class="card-body">
+          <div class="reset-card-body">
+            <select class="reset-select" id="reset-store-sel">
+              <option value="">全出店</option>
+            </select>
+            <select class="reset-select" id="reset-day-sel">
+              <option value="1">1日目の在庫</option>
+              <option value="2">2日目の在庫</option>
+              <option value="both">両日の在庫</option>
+            </select>
+            <button class="btn-reset" onclick="confirmResetStock()">🔄 初期値に戻す</button>
+            <span style="font-size:0.78rem;color:var(--text-muted);">※売上データも同時にリセットされます</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 出店一覧 -->
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h2 style="flex:1">🏪 出店一覧</h2>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:0.75rem;color:var(--text-muted);">ソート:</span>
+            <button class="btn btn-ghost btn-sm" onclick="sortStores('id')" id="sort-id">ID順</button>
+            <button class="btn btn-ghost btn-sm" onclick="sortStores('name')" id="sort-name">名前順</button>
+            <button class="btn btn-primary btn-sm" onclick="exportAllUrls()">📥 全URL JSON出力</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="store-grid" id="store-grid">
+            <div class="empty-state">出店がありません</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ロゴ管理 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🖼️ ロゴ管理（客画面左上に表示）</h2>
+          <div class="section-bar">
+            <select class="input" id="logo-store-select" style="min-width:180px;flex:none;">
+              <option value="">出店を選択...</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="loadLogoEditor()">読み込む</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="logo-editor">
+            <div class="empty-state">出店を選択してください</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品管理 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📦 商品管理</h2>
+          <div class="section-bar">
+            <select class="input" id="product-store-select" style="min-width:180px;flex:none;">
+              <option value="">出店を選択...</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="loadProductEditor()">読み込む</button>
+            <button class="btn btn-primary btn-sm" onclick="saveProducts()">💾 保存</button>
+            <button class="btn btn-ghost btn-sm" onclick="addProduct()">＋ 商品追加</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="product-editor">
+            <div class="empty-state">出店を選択してください</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PayPay設定 -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📱 PayPay設定</h2>
+        </div>
+        <div class="card-body">
+          <div class="paypay-info">
+            <strong>⚠️ PayPay Open Payment APIについて</strong><br>
+            PayPay Open Payment APIは<strong>法人契約・事前審査が必要</strong>なため、学校祭での個人利用はできません。<br>
+            代わりに、以下の方法で実用的なQR決済が可能です：<br><br>
+            <strong>【推奨】PayPay個人送金QR方式</strong><br>
+            ① PayPayアプリ →「受け取る」→「リンクを作成」でURLを取得<br>
+            ② 下の欄にそのURLを入力して保存<br>
+            ③ 客画面で金額入りメッセージ付きのQRが表示されます（送金額は客が手入力）<br><br>
+            ※ 金額の確認は客のPayPay送金完了画面を店員が目視確認してください。
+          </div>
+          <div class="paypay-form">
+            <div>
+              <label>出店選択</label>
+              <select class="input" id="paypay-store-select" style="width:auto;min-width:200px;flex:none;">
+                <option value="">出店を選択...</option>
+              </select>
+            </div>
+            <div>
+              <label>PayPay受け取りURL（例: https://qr.paypay.ne.jp/xxxxxx）</label>
+              <input class="input" id="paypay-url" placeholder="PayPayアプリの「受け取る→リンク作成」で取得したURL">
+            </div>
+            <div>
+              <button class="btn btn-primary btn-sm" onclick="savePaypayUrl()">保存</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 売上データ -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📊 売上データ</h2>
+          <div class="section-bar">
+            <select class="input" id="sales-store-select" style="min-width:180px;flex:none;">
+              <option value="">出店を選択...</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="setSalesDay(1)" id="sales-day1-btn"
+              style="font-weight:900">1日目</button>
+            <button class="btn btn-ghost btn-sm" onclick="setSalesDay(2)" id="sales-day2-btn">2日目</button>
+            <button class="btn btn-primary btn-sm" onclick="loadSales()">読み込む</button>
+            <button class="btn btn-danger btn-sm" onclick="resetSales()">🗑️ リセット</button>
+          </div>
+        </div>
+        <div class="card-body" id="sales-panel">
+          <div class="empty-state">出店を選択してください</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="day-dialog-overlay" id="day-dialog-overlay">
+      <div class="day-dialog">
+        <div class="day-dialog-icon" id="day-dialog-icon">📅</div>
+        <h3 id="day-dialog-title">開催日を切り替えますか？</h3>
+        <p id="day-dialog-desc"></p>
+        <div class="day-dialog-warn" id="day-dialog-warn"></div>
+        <div class="day-dialog-btns">
+          <button class="btn-day-cancel" onclick="closeDayDialog()">キャンセル</button>
+          <button id="btn-day-confirm" class="btn-day-confirm" onclick="executeDaySwitch()">切り替える</button>
+        </div>
       </div>
     </div>
-    <div class="card-body" id="sales-panel"><div class="empty-state">出店を選択してください</div></div>
-  </div>
 
-</div>
-<div class="toast" id="toast"></div>
-<div class="day-dialog-overlay" id="day-dialog-overlay">
-  <div class="day-dialog">
-    <div class="day-dialog-icon" id="day-dialog-icon">📅</div>
-    <h3 id="day-dialog-title">開催日を切り替えますか？</h3>
-    <p id="day-dialog-desc"></p>
-    <div class="day-dialog-warn" id="day-dialog-warn"></div>
-    <div class="day-dialog-btns">
-      <button class="btn-day-cancel" onclick="closeDayDialog()">キャンセル</button>
-      <button id="btn-day-confirm" class="btn-day-confirm" onclick="executeDaySwitch()">切り替える</button>
-    </div>
-  </div>
-</div>
+  </div><!-- /admin-app -->
 
-</div><!-- /admin-app -->
-
-<script>
-const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-let ws, storeList = [], editingProducts = [], currentProductStoreId = null, logoStoreId = null;
-let currentDay = 1, pendingDay = null;
-let adminPassword = sessionStorage.getItem('admin_pw') || '';
-
-// ── WebSocket ──────────────────────────────────────────────────
-function connect() {
-  ws = new WebSocket(WS_URL);
-  ws.onopen = () => {
-    if (adminPassword) {
-      ws.send(JSON.stringify({ type:'REGISTER', role:'admin', storeId:null, password: adminPassword }));
-    } else {
-      showLoginGate(false);
-    }
-  };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'AUTH_FAILED') { showLoginGate(true); return; }
-    if (msg.type === 'REGISTERED') {
-      hideLoginGate();
-      if (msg.currentDay) { currentDay = msg.currentDay; updateDayUI(); }
-    }
-    // STORE_LISTだけでセレクトを更新（選択中の値を保持）
-    if (msg.type === 'STORE_LIST') { storeList = msg.stores; renderStoreList(); updateSelects(); }
-    if (msg.type === 'DAY_STATE') { currentDay = msg.currentDay; updateDayUI(); }
-    if (msg.type === 'STORE_STATE') onStoreState(msg.store);
-    if (msg.type === 'STORE_CREATED') toast('✅ 出店を作成しました');
-    if (msg.type === 'RESET_STOCK_DONE') toast('🔄 在庫をリセットしました');
-    if (msg.type === 'SALES_DATA') renderSales(msg.sales, msg.totalRevenue, msg.currentDay);
-    if (msg.type === 'ERROR') alert('エラー: ' + msg.message);
-  };
-  ws.onclose = () => setTimeout(connect, 2000);
-}
-
-// ── パスワードゲート ──────────────────────────────────────────────
-function showLoginGate(isError) {
-  document.getElementById('admin-app').style.display = 'none';
-  document.getElementById('login-gate').style.display = 'flex';
-  document.getElementById('login-error').style.display = isError ? 'block' : 'none';
-  if (isError) {
-    sessionStorage.removeItem('admin_pw');
-    adminPassword = '';
-    document.getElementById('login-pw-input').value = '';
-    document.getElementById('login-pw-input').focus();
-  }
-}
-
-function hideLoginGate() {
-  document.getElementById('login-gate').style.display = 'none';
-  document.getElementById('admin-app').style.display = '';
-}
-
-function submitLogin() {
-  const pw = document.getElementById('login-pw-input').value;
-  if (!pw) return;
-  adminPassword = pw;
-  sessionStorage.setItem('admin_pw', pw);
-  ws.send(JSON.stringify({ type:'REGISTER', role:'admin', storeId:null, password: adminPassword }));
-}
-
-// ── STORE_STATE受信ハンドラ（選択状態を壊さない）──────────────
-let pendingStoreStateResolve = null;
-
-function onStoreState(store) {
-  // 商品エディタ読み込み中の場合のみ処理
-  if (pendingStoreStateResolve) {
-    pendingStoreStateResolve(store);
-    pendingStoreStateResolve = null;
-  }
-  // ロゴプレビュー更新（エディタが開いている場合のみ）
-  if (logoStoreId) updateLogoPreview(store.logo);
-}
-
-function waitForStoreState() {
-  return new Promise(resolve => { pendingStoreStateResolve = resolve; });
-}
-
-// ── 日切替 ─────────────────────────────────────────────────────
-function updateDayUI() {
-  const isDay2 = currentDay === 2;
-  document.getElementById('day-toggle-input').checked = isDay2;
-  document.getElementById('current-day-badge').textContent = isDay2 ? '2日目' : '1日目';
-  document.getElementById('current-day-badge').className = 'day-badge ' + (isDay2 ? 'day2' : 'day1');
-  document.getElementById('header-day-badge').textContent = isDay2 ? '2日目' : '1日目';
-  document.getElementById('header-day-badge').className = 'day-badge ' + (isDay2 ? 'day2' : 'day1');
-}
-
-function onDayToggleChange(input) {
-  // 即座に元に戻す（確認後に切替）
-  input.checked = currentDay === 2;
-  const toDay = currentDay === 1 ? 2 : 1;
-  pendingDay = toDay;
-  const fromLabel = currentDay + '日目';
-  const toLabel = toDay + '日目';
-  document.getElementById('day-dialog-icon').textContent = toDay === 2 ? '📅' : '🔙';
-  document.getElementById('day-dialog-title').textContent = fromLabel + ' → ' + toLabel + ' に切り替えますか？';
-  document.getElementById('day-dialog-desc').textContent =
-    '切り替えると、すべての出店・端末の表示が' + toLabel + 'の内容に変わります。' +
-    '在庫・商品ラインナップ・売上データはそれぞれ独立しています。';
-  document.getElementById('day-dialog-warn').innerHTML =
-    '<strong>⚠️ 注意：</strong> 切り替え中の取引は中断されます。<br>' +
-    '売上データは日ごとに保存されるため、' + fromLabel + 'のデータは失われません。<br>' +
-    '双方向に切り替え可能です（テストも可能）。';
-  const confirmBtn = document.getElementById('btn-day-confirm');
-  confirmBtn.textContent = toLabel + ' に切り替える';
-  confirmBtn.className = 'btn-day-confirm' + (toDay === 2 ? ' to-day2' : '');
-  document.getElementById('day-dialog-overlay').classList.add('visible');
-}
-
-function closeDayDialog() {
-  document.getElementById('day-dialog-overlay').classList.remove('visible');
-  pendingDay = null;
-}
-
-function executeDaySwitch() {
-  if (!pendingDay) return;
-  ws.send(JSON.stringify({ type: 'SET_DAY', day: pendingDay }));
-  closeDayDialog();
-  toast('📅 ' + pendingDay + '日目に切り替えました');
-}
-
-// ── 出店一覧 ──────────────────────────────────────────────────
-function createStore() {
-  const id = document.getElementById('new-store-id').value.trim();
-  const name = document.getElementById('new-store-name').value.trim();
-  if (!id || !name) { alert('IDと名前を入力してください'); return; }
-  if (!/^[a-zA-Z0-9_-]+$/.test(id)) { alert('IDは英数字・_・-のみ使用できます'); return; }
-  ws.send(JSON.stringify({ type:'CREATE_STORE', newStoreId:id, storeName:name }));
-  document.getElementById('new-store-id').value = '';
-  document.getElementById('new-store-name').value = '';
-}
-
-let sortKey = 'id'; // 'id' or 'name'
-
-function sortStores(key) {
-  sortKey = key;
-  document.getElementById('sort-id').style.fontWeight = key === 'id' ? '900' : '';
-  document.getElementById('sort-name').style.fontWeight = key === 'name' ? '900' : '';
-  renderStoreList();
-}
-
-function confirmResetStock() {
-  const storeId = document.getElementById('reset-store-sel').value;
-  const day = document.getElementById('reset-day-sel').value;
-  const storeName = storeId
-    ? (storeList.find(s => s.id === storeId) || {}).name || storeId
-    : '全出店';
-  const dayLabel = day === 'both' ? '両日' : day + '日目';
-  if (!confirm('【' + storeName + '】の ' + dayLabel + ' の在庫を初期値に戻しますか？\n\n売上データも同時にリセットされます。\nこの操作は取り消せません。')) return;
-  ws.send(JSON.stringify({ type:'RESET_STOCK', storeId: storeId || null, day: day === 'both' ? 'both' : parseInt(day) }));
-}
-
-function exportAllUrls() {
-  if (!storeList.length) { alert('出店がありません'); return; }
-  const base = location.protocol + '//' + location.host;
-  const obj = {};
-  storeList.forEach(function(s) {
-    obj[s.id] = {
-      name: s.name,
-      customer: base + '/customer?store=' + s.id,
-      staff:    base + '/staff?store='    + s.id,
-      backyard: base + '/backyard?store=' + s.id
-    };
-  });
-  const json = JSON.stringify(obj, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'store_urls.json';
-  a.click();
-  toast('📥 store_urls.json をダウンロードしました');
-}
-
-function renderStoreList() {
-  const grid = document.getElementById('store-grid');
-  if (!storeList.length) { grid.innerHTML = '<div class="empty-state">出店がありません</div>'; return; }
-  const sorted = storeList.slice().sort(function(a, b) {
-    if (sortKey === 'name') return a.name.localeCompare(b.name, 'ja');
-    return a.id.localeCompare(b.id);
-  });
-  const THEME_LABELS = { orange:'🟠 オレンジ', red:'🔴 レッド', blue:'🔵 ブルー', green:'🟢 グリーン', purple:'🟣 パープル', dark:'⚫ ダーク' };
-  grid.innerHTML = sorted.map(function(s) {
-    const themeOpts = Object.keys(THEME_LABELS).map(function(k) {
-      const sel = (s.theme || 'orange') === k ? ' selected' : '';
-      return '<option value="' + k + '"' + sel + '>' + THEME_LABELS[k] + '</option>';
-    }).join('');
-    return '<div class="store-card">' +
-      '<div class="sc-head">' +
-        '<div class="sc-icon">🏪</div>' +
-        '<div class="sc-title" style="flex:1">' +
-          '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<h3 id="sname-' + s.id + '">' + s.name + '</h3>' +
-            '<button class="link-btn" style="background:#EEF0FF;color:#3B4CCA;padding:3px 8px;font-size:0.72rem;" onclick="startRename(\'' + s.id + '\')">✏️ 編集</button>' +
-          '</div>' +
-          '<div class="sc-id">ID: ' + s.id + '</div>' +
-        '</div>' +
-        '<button class="link-btn" style="background:#FFF0F0;color:#E53E3E;font-size:0.72rem;" onclick="deleteStore(\'' + s.id + '\',\'' + s.name + '\')">🗑️ 削除</button>' +
-      '</div>' +
-      '<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
-        '<span style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap;">客画面テーマ:</span>' +
-        '<select class="input" style="flex:1;padding:5px 8px;font-size:0.8rem;" onchange="updateTheme(\'' + s.id + '\',this.value)">' +
-          themeOpts +
-        '</select>' +
-      '</div>' +
-      '<div class="sc-links">' +
-        '<a class="link-btn link-customer" href="/customer?store=' + s.id + '" target="_blank">👤 客画面</a>' +
-        '<a class="link-btn link-staff" href="/staff?store=' + s.id + '" target="_blank">🧑‍💼 店員画面</a>' +
-        '<a class="link-btn link-backyard" href="/backyard?store=' + s.id + '" target="_blank">🍳 バックヤード</a>' +
-        '<button class="link-btn link-copy" onclick="copyUrls(\'' + s.id + '\')">📋 URLコピー</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-// セレクトを更新するが、現在の選択値を保持する
-function updateSelects() {
-  // 在庫リセット用セレクト
-  const resetSel = document.getElementById('reset-store-sel');
-  if (resetSel) {
-    const cur = resetSel.value;
-    resetSel.innerHTML = '<option value="">全出店</option>';
-    storeList.forEach(s => {
-      const o = document.createElement('option');
-      o.value = s.id; o.textContent = s.name;
-      resetSel.appendChild(o);
-    });
-    if (cur) resetSel.value = cur;
-  }
-  const opts = storeList.map(s => `<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
-  ['product-store-select','sales-store-select','logo-store-select','paypay-store-select'].forEach(id => {
-    const el = document.getElementById(id);
-    const current = el.value; // 現在の選択値を保存
-    el.innerHTML = '<option value="">出店を選択...</option>' + opts;
-    if (current) el.value = current; // 選択値を復元
-  });
-}
-
-function copyUrls(storeId) {
-  const text = '【客画面】 http://' + location.host + '/customer?store=' + storeId + '\n【店員画面】 http://' + location.host + '/staff?store=' + storeId + '\n【バックヤード】 http://' + location.host + '/backyard?store=' + storeId;
-  navigator.clipboard.writeText(text).then(() => toast('📋 URLをコピーしました'));
-}
-
-function startRename(storeId) {
-  const el = document.getElementById('sname-' + storeId);
-  if (!el) return;
-  const current = el.textContent;
-  const input = document.createElement('input');
-  input.value = current;
-  input.style.cssText = 'font-size:0.95rem;font-weight:700;border:2px solid var(--primary);border-radius:6px;padding:2px 8px;font-family:inherit;width:140px;';
-  input.onblur = () => {
-    const newName = input.value.trim();
-    if (newName && newName !== current) {
-      ws.send(JSON.stringify({ type:'RENAME_STORE', storeId, newName }));
-      toast('✅ 出店名を変更しました');
-    }
-    el.textContent = newName || current;
-    input.replaceWith(el);
-  };
-  input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.value = current; input.blur(); } };
-  el.replaceWith(input);
-  input.focus(); input.select();
-}
-
-function deleteStore(storeId, storeName) {
-  if (!confirm('「' + storeName + '」を削除しますか？\n売上・商品データもすべて消えます。')) return;
-  ws.send(JSON.stringify({ type:'DELETE_STORE', storeId }));
-  toast('🗑️ 出店を削除しました');
-}
-
-function updateTheme(storeId, theme) {
-  ws.send(JSON.stringify({ type:'UPDATE_THEME', storeId, theme }));
-  toast('🎨 テーマを変更しました');
-}
-
-// ── ロゴ管理 ──────────────────────────────────────────────────
-function loadLogoEditor() {
-  logoStoreId = document.getElementById('logo-store-select').value;
-  if (!logoStoreId) { alert('出店を選択してください'); return; }
-  // storeStateを取得してロゴを表示
-  const p = waitForStoreState();
-  ws.send(JSON.stringify({ type:'REGISTER', role:'admin_product', storeId: logoStoreId, password: adminPassword }));
-  p.then(store => {
-    const logoUrl = store.logo;
-    const previewHtml = logoUrl
-      ? `<img class="logo-preview" id="logo-preview-wrap" src="${logoUrl}?${Date.now()}">`
-      : `<div class="logo-preview-placeholder" id="logo-preview-wrap">🏪</div>`;
-    document.getElementById('logo-editor').innerHTML = `
-      <div class="logo-upload-area">
-        ${previewHtml}
-        <div>
-          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">推奨: 正方形の画像（PNG/JPG/WebP）</p>
-          <input type="file" id="logo-file-input" accept="image/*" onchange="uploadLogo(this)">
-          <button class="btn btn-primary btn-sm" onclick="document.getElementById('logo-file-input').click()">📁 ロゴ画像を選択</button>
-          <button class="btn btn-ghost btn-sm" onclick="removeLogo()" style="margin-left:6px;">削除</button>
-        </div>
-      </div>`;
-  });
-}
-
-function updateLogoPreview(logoUrl) {
-  const wrap = document.getElementById('logo-preview-wrap');
-  if (!wrap) return;
-  if (logoUrl) {
-    const img = document.createElement('img');
-    img.className = 'logo-preview'; img.id = 'logo-preview-wrap';
-    img.src = logoUrl + '?' + Date.now();
-    wrap.replaceWith(img);
-  } else {
-    const div = document.createElement('div');
-    div.className = 'logo-preview-placeholder'; div.id = 'logo-preview-wrap';
-    div.textContent = '🏪'; wrap.replaceWith(div);
-  }
-}
-
-async function uploadLogo(input) {
-  if (!input.files[0] || !logoStoreId) return;
-  const fd = new FormData();
-  fd.append('storeId', logoStoreId); fd.append('field', 'logo'); fd.append('file', input.files[0]);
-  try {
-    const res = await fetch('/api/upload', { method:'POST', body:fd });
-    const data = await res.json();
-    if (data.url) { updateLogoPreview(data.url); toast('✅ ロゴを更新しました'); }
-    else toast('❌ アップロード失敗');
-  } catch(e) { toast('❌ エラー: ' + e.message); }
-}
-
-function removeLogo() {
-  if (!logoStoreId) return;
-  ws.send(JSON.stringify({ type:'UPDATE_LOGO', storeId: logoStoreId, logo: null }));
-  updateLogoPreview(null); toast('🗑️ ロゴを削除しました');
-}
-
-// ── 商品管理 ──────────────────────────────────────────────────
-async function loadProductEditor() {
-  const storeId = document.getElementById('product-store-select').value;
-  if (!storeId) { alert('出店を選択してください'); return; }
-  currentProductStoreId = storeId;
-
-  const p = waitForStoreState();
-  ws.send(JSON.stringify({ type:'REGISTER', role:'admin_product', storeId, password: adminPassword }));
-  const store = await p;
-  editingProducts = store.products.map(p => ({...p}));
-  renderProductEditor();
-}
-
-let editingDay = 1; // 商品エディタで編集中の日
-
-function renderProductEditor() {
-  if (!currentProductStoreId) return;
-  const d1 = editingDay === 1;
-  document.getElementById('product-editor').innerHTML =
-    '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
-      '<button class="btn btn-sm ' + (d1 ? 'btn-primary' : 'btn-ghost') + '" onclick="switchEditDay(1)">📅 1日目</button>' +
-      '<button class="btn btn-sm ' + (!d1 ? 'btn-danger' : 'btn-ghost') + '" onclick="switchEditDay(2)">📅 2日目</button>' +
-      '<span style="font-size:0.78rem;color:var(--text-muted);align-self:center;margin-left:6px;">表示チェックを外すとその日は非表示になります</span>' +
-    '</div>' +
-    '<table class="product-editor-table">' +
-      '<thead><tr><th>画像</th><th>商品名</th><th>価格(¥)</th><th>在庫数</th><th>表示</th><th></th></tr></thead>' +
-      '<tbody id="product-tbody"></tbody>' +
-    '</table>';
-  renderProductRows();
-}
-
-function switchEditDay(day) {
-  editingDay = day;
-  renderProductEditor();
-}
-
-function renderProductRows() {
-  const tbody = document.getElementById('product-tbody');
-  if (!tbody || !currentProductStoreId) return;
-  const d = editingDay;
-  tbody.innerHTML = editingProducts.map(function(p, i) {
-    const imgHtml = p.image
-      ? '<img class="product-thumb" src="' + p.image + '?' + Date.now() + '">'
-      : '<div class="product-thumb-placeholder">📦</div>';
-    const stock = d === 1 ? (p.stock1 !== undefined ? p.stock1 : 0) : (p.stock2 !== undefined ? p.stock2 : 0);
-    const active = d === 1 ? (p.active1 !== false) : (p.active2 !== false);
-    const stockField = d === 1 ? 'stock1' : 'stock2';
-    const activeField = d === 1 ? 'active1' : 'active2';
-    return '<tr style="' + (!active ? 'opacity:0.5;' : '') + '">' +
-      '<td><div class="img-upload-cell">' +
-        imgHtml +
-        '<input type="file" id="pimg-' + p.id + '" accept="image/*" onchange="uploadProductImage(this,' + p.id + ')">' +
-        '<button class="img-upload-btn" onclick="document.getElementById(\'pimg-' + p.id + '\').click()">画像変更</button>' +
-      '</div></td>' +
-      '<td><input type="text" value="' + escHtml(p.name) + '" oninput="editingProducts[' + i + '].name=this.value"></td>' +
-      '<td><input type="number" value="' + p.price + '" min="0" oninput="editingProducts[' + i + '].price=+this.value" style="width:80px"></td>' +
-      '<td><input type="number" value="' + stock + '" min="0" oninput="editingProducts[' + i + '].' + stockField + '=+this.value" style="width:70px"></td>' +
-      '<td style="text-align:center;"><input type="checkbox" ' + (active ? 'checked' : '') + ' onchange="editingProducts[' + i + '].' + activeField + '=this.checked;renderProductRows()" style="width:18px;height:18px;cursor:pointer;"></td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="removeProduct(' + i + ')">削除</button></td>' +
-    '</tr>';
-  }).join('');
-}
-
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-function removeProduct(idx) { editingProducts.splice(idx,1); renderProductRows(); }
-
-function addProduct() {
-  if (!currentProductStoreId) { alert('まず出店を選択・読み込みしてください'); return; }
-  const maxId = editingProducts.reduce((m,p) => Math.max(m,p.id), 0);
-  editingProducts.push({ id:maxId+1, name:'新商品', price:100, stock1:50, stock2:50, active1:true, active2:true, image:null });
-  renderProductRows();
-}
-
-function saveProducts() {
-  if (!currentProductStoreId) { alert('出店を選択・読み込みしてください'); return; }
-  ws.send(JSON.stringify({ type:'UPDATE_PRODUCTS', storeId:currentProductStoreId, products:editingProducts }));
-  toast('✅ 商品を保存しました');
-}
-
-async function uploadProductImage(input, productId) {
-  if (!input.files[0] || !currentProductStoreId) return;
-  const fd = new FormData();
-  fd.append('storeId', currentProductStoreId); fd.append('field','product');
-  fd.append('productId', productId); fd.append('file', input.files[0]);
-  try {
-    const res = await fetch('/api/upload', { method:'POST', body:fd });
-    const data = await res.json();
-    if (data.url) {
-      const p = editingProducts.find(p => p.id === productId);
-      if (p) p.image = data.url;
-      renderProductRows(); toast('✅ 商品画像を更新しました');
-    } else toast('❌ アップロード失敗');
-  } catch(e) { toast('❌ エラー: ' + e.message); }
-}
-
-// ── PayPay URL設定 ─────────────────────────────────────────────
-function savePaypayUrl() {
-  const storeId = document.getElementById('paypay-store-select').value;
-  const url = document.getElementById('paypay-url').value.trim();
-  if (!storeId) { alert('出店を選択してください'); return; }
-  ws.send(JSON.stringify({ type:'UPDATE_PAYPAY_URL', storeId, paypayUrl: url }));
-  toast('✅ PayPay URLを保存しました');
-}
-
-// ── 売上 ──────────────────────────────────────────────────────
-let viewingSalesDay = 1;
-function setSalesDay(day) {
-  viewingSalesDay = day;
-  document.getElementById('sales-day1-btn').style.fontWeight = day === 1 ? '900' : '';
-  document.getElementById('sales-day2-btn').style.fontWeight = day === 2 ? '900' : '';
-  loadSales();
-}
-
-function loadSales() {
-  const storeId = document.getElementById('sales-store-select').value;
-  if (!storeId) { alert('出店を選択してください'); return; }
-  ws.send(JSON.stringify({ type:'GET_SALES', storeId, day: viewingSalesDay }));
-}
-
-function renderSales(sales, totalRevenue, day) {
-  const panel = document.getElementById('sales-panel');
-  const cashRev = sales.filter(s=>s.method==='cash').reduce((s,x)=>s+x.total,0);
-  const dayLabel = (day || viewingSalesDay) === 2 ? '2日目' : '1日目';
-  panel.innerHTML =
-    '<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;">' +
-      '<span class="day-badge ' + ((day||viewingSalesDay)===2?'day2':'day1') + '">' + dayLabel + '</span>' +
-      '<span style="font-size:0.78rem;color:var(--text-muted);">の売上データ</span>' +
-    '</div>' +
-    `<div class="summary-grid">
-      <div class="summary-card"><span class="s-label">売上合計</span><div class="s-value">¥${totalRevenue.toLocaleString()}</div></div>
-      <div class="summary-card"><span class="s-label">件数</span><div class="s-value">${sales.length}件</div></div>
-      <div class="summary-card"><span class="s-label">現金</span><div class="s-value">¥${cashRev.toLocaleString()}</div></div>
-      <div class="summary-card"><span class="s-label">PayPay</span><div class="s-value">¥${(totalRevenue-cashRev).toLocaleString()}</div></div>
-    </div>
-    ${sales.length===0?'<div class="empty-state">まだ売上がありません</div>':`
-    <table class="sales-table">
-      <thead><tr><th>時刻</th><th>方法</th><th>商品</th><th>合計</th></tr></thead>
-      <tbody>${[...sales].reverse().map(s=>`
-        <tr>
-          <td>${new Date(s.time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}</td>
-          <td><span class="method-tag method-${s.method}">${s.method==='paypay'?'PayPay':'現金'}</span></td>
-          <td>${s.items.map(i=>escHtml(i.name)+'×'+i.qty).join(', ')}</td>
-          <td><strong>¥${s.total.toLocaleString()}</strong></td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`}`;
-}
-
-function resetSales() {
-  const storeId = document.getElementById('sales-store-select').value;
-  if (!storeId) { alert('出店を選択してください'); return; }
-  if (!confirm(storeId + ' の売上をリセットしますか？')) return;
-  ws.send(JSON.stringify({ type:'RESET_SALES', storeId }));
-  toast('🗑️ 売上をリセットしました');
-  setTimeout(loadSales, 400);
-}
-
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-connect();
-</script>
+  <script src="/js/admin.js"></script>
 </body>
+
 </html>

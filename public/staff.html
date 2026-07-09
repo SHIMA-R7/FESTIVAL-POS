@@ -1,654 +1,114 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>店員画面</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap');
-  :root {
-    --bg:#1A1A2E; --surface:#16213E; --primary:#E94560; --accent:#F5A623;
-    --green:#0EC96B; --red:#E53E3E; --text:#E8E8F0; --text-muted:#7A7A9A;
-    --border:#2A2A4A; --radius:16px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;height:100dvh;overflow:hidden;background:var(--bg);font-family:'Noto Sans JP',sans-serif;color:var(--text);}
-
-  header{background:var(--surface);padding:14px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0;}
-  .staff-badge{background:var(--primary);color:white;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;}
-  header h1{font-size:1.1rem;font-weight:700;flex:1;}
-  .time-display{font-family:'Oswald',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:0.05em;}
-
-  .main{display:flex;height:calc(100vh - 58px);height:calc(100dvh - 58px);overflow:hidden;}
-
-  /* ── 左パネル ── */
-  .status-panel{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 14px;gap:14px;flex-shrink:0;overflow:hidden;}
-  .stat-card{background:var(--bg);border-radius:var(--radius);padding:14px;border:1px solid var(--border);text-align:center;}
-  .stat-label{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
-  .stat-value{font-family:'Oswald',sans-serif;font-size:2rem;color:var(--accent);}
-  .stat-unit{font-size:0.82rem;color:var(--text-muted);}
-  .stat-card.green .stat-value{color:var(--green);}
-  .stock-section{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:60px;}
-  .stock-section h3{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;flex-shrink:0;}
-  .stock-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:7px;}
-  .stock-item{background:var(--bg);border-radius:10px;padding:9px 11px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);}
-  .stock-name{font-size:0.83rem;font-weight:500;}
-  .stock-price{font-size:0.72rem;color:var(--text-muted);}
-  .stock-count{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--text);}
-  .stock-count.low{color:var(--primary);}
-  .stock-count.over{color:var(--accent);font-size:0.75rem;font-weight:700;}
-  .btn-overstock{
-    width:100%;margin-top:4px;padding:5px 8px;
-    background:#F5A62322;border:1px dashed var(--accent);border-radius:8px;
-    color:var(--accent);font-size:0.68rem;font-weight:700;font-family:inherit;
-    cursor:pointer;transition:all 0.15s;
-  }
-  .btn-overstock:hover{background:#F5A62344;}
-  .btn-overstock.active{background:var(--accent);color:#000;}
-
-  /* ── モード切替ボタン ── */
-  /* カウントアップモードボタン */
-  .mode-btn-cu{
-    margin-top:4px;flex-shrink:0;
-    background:var(--bg);border:2px solid var(--border);border-radius:12px;
-    padding:8px 12px;cursor:pointer;font-family:inherit;font-size:0.75rem;font-weight:700;
-    color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:6px;
-    transition:all 0.18s;
-  }
-  .mode-btn-cu:hover{border-color:#06D6A0;color:#06D6A0;}
-  .mode-btn-cu.active{background:#06D6A022;border-color:#06D6A0;color:#06D6A0;}
-  .mode-btn-cu .mode-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
-  .mode-btn-cu.active .mode-dot{background:#06D6A0;}
-
-  /* 設定パネル */
-  .settings-panel{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;margin-top:4px;}
-  .settings-panel label{font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;}
-  .theme-btns{display:flex;gap:4px;flex-wrap:wrap;}
-  .theme-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
-  .theme-dot.selected{border-color:white;box-shadow:0 0 0 2px var(--accent);}
-  .logo-upload-btn{padding:5px 8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:0.68rem;font-family:inherit;cursor:pointer;color:var(--text);width:100%;}
-
-  .mode-btn{
-    margin-top:auto;
-    flex-shrink:0;
-    background:var(--bg);border:2px solid var(--border);border-radius:12px;
-    padding:10px 12px;cursor:pointer;font-family:inherit;font-size:0.8rem;font-weight:700;
-    color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:8px;
-    transition:all 0.18s;
-  }
-  .mode-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .mode-btn.active{background:#F5A62322;border-color:var(--accent);color:var(--accent);}
-  .mode-btn .mode-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
-  .mode-btn.active .mode-dot{background:var(--accent);}
-
-  /* ── 右パネル ── */
-  .right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
-
-  /* ── 決済待ちエリア ── */
-  .pending-area{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:160px;max-height:45vh;border-bottom:1px solid var(--border);overflow-y:auto;}
-  .pending-idle{display:flex;flex-direction:column;align-items:center;gap:10px;}
-  .idle-icon{font-size:3rem;opacity:0.3;}
-  .pending-idle p{color:var(--text-muted);font-size:0.95rem;}
-
-  .payment-panel{width:100%;max-width:480px;background:var(--surface);border-radius:20px;border:2px solid var(--border);overflow:hidden;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);}
-  @keyframes popIn{from{transform:scale(0.92);opacity:0}to{transform:scale(1);opacity:1}}
-  .payment-panel-header{padding:14px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
-  .payment-method-tag{padding:5px 14px;border-radius:20px;font-size:0.88rem;font-weight:700;letter-spacing:0.04em;}
-  .method-paypay{background:#C0392B22;color:#E74C3C;border:1px solid #C0392B55;}
-  .method-cash{background:#06D6A022;color:#06D6A0;border:1px solid #06D6A055;}
-  .waiting-label{color:var(--text-muted);font-size:0.83rem;flex:1;}
-  .waiting-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:blink 1s ease infinite;}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-  .payment-items{padding:12px 20px;display:flex;flex-direction:column;gap:7px;max-height:160px;overflow-y:auto;}
-  .payment-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
-  .payment-item:last-child{border-bottom:none;}
-  .pi-name{font-size:0.88rem;}
-  .pi-qty{font-size:0.78rem;color:var(--text-muted);margin-left:6px;}
-  .pi-price{font-family:'Oswald',sans-serif;font-size:1.05rem;color:var(--accent);}
-  .payment-total{margin:0 20px;padding:12px 14px;background:var(--bg);border-radius:10px;display:flex;justify-content:space-between;align-items:baseline;}
-  .pt-label{font-size:0.83rem;color:var(--text-muted);}
-  .pt-amount{font-family:'Oswald',sans-serif;font-size:1.8rem;color:var(--accent);}
-  .btn-confirm{margin:14px 20px 18px;width:calc(100% - 40px);padding:18px;background:linear-gradient(135deg,var(--green),#05A355);border:none;border-radius:14px;color:white;font-size:1.1rem;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 8px 24px rgba(14,201,107,0.35);animation:pulse 1.8s ease infinite;}
-  @keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(14,201,107,0.35)}50%{box-shadow:0 8px 36px rgba(14,201,107,0.6)}}
-  .btn-confirm:active{transform:scale(0.97);animation:none;}
-
-  /* ── 売上ログ（メイン領域）── */
-  .log-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
-  .log-header{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
-  .log-header h3{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);flex:1;}
-  .log-count{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2px 10px;font-size:0.72rem;color:var(--text-muted);}
-  .log-body{flex:1;overflow-y:auto;padding:0;padding-bottom:132px;}
-
-  /* ── 表形式ログ ── */
-  .log-table{width:100%;border-collapse:collapse;table-layout:fixed;}
-
-  /* ヘッダー行 */
-  .log-table thead th{position:sticky;top:0;z-index:2;}
-  .log-table th{
-    background:#0D1A30;color:var(--text-muted);
-    font-size:0.7rem;font-weight:700;letter-spacing:0.06em;
-    padding:8px 4px;text-align:center;
-    border-bottom:2px solid var(--border);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .log-table th.col-fixed{text-align:left;padding-left:10px;}
-
-  /* データ行 */
-  .log-table tbody tr{
-    border-bottom:1px solid var(--border);
-    transition:background 0.12s;
-    animation:fadeSlide 0.22s ease;
-  }
-  @keyframes fadeSlide{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
-  .log-table tbody tr:hover{background:rgba(255,255,255,0.04);}
-
-  /* ① 個数セル：数字をセルの縦幅いっぱいに表示 */
-  .log-table td{
-    padding:0 4px;
-    height:44px;          /* 行高さを固定 */
-    text-align:center;
-    font-family:'Oswald',sans-serif;
-    font-size:1.05rem;
-    color:var(--text);
-    vertical-align:middle;
-  }
-  .log-table td.col-fixed{text-align:left;padding-left:10px;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;}
-
-  /* 0個は薄く */
-  .log-table td.qty-zero{color:var(--border);}
-  /* ① 個数あり：行の縦幅ぴったりの大文字数字 */
-  .log-table td.qty-pos{
-    color:var(--accent);
-    font-weight:700;
-    /* line-height=1 + font-size=heightで行高いっぱいに */
-    font-size:2.4rem;
-    line-height:44px;
-    padding:0 2px;
-  }
-
-  .col-num{width:36px;color:var(--text-muted);font-size:0.82rem;}
-  .col-ticket{width:72px;}  /* ③ 番号札列 */
-  .col-delivered{width:44px;} /* ④ チェックボックス列 */
-  .col-time{width:48px;font-size:0.8rem;color:var(--text-muted);font-family:'Oswald',sans-serif;}
-  .col-method{width:54px;}
-  .col-total{width:68px;color:var(--green);}
-  .col-revert{width:46px;}
-
-  .log-method{padding:2px 6px;border-radius:8px;font-size:0.68rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;}
-  .log-method.cash{background:#06D6A022;color:#06D6A0;}
-  .log-method.paypay{background:#E74C3C22;color:#E74C3C;}
-
-  /* 取り消しボタン */
-  .btn-revert{
-    background:none;border:1px solid #E53E3E44;color:#E53E3E;
-    border-radius:8px;padding:4px 10px;font-size:0.72rem;font-family:inherit;
-    cursor:pointer;flex-shrink:0;transition:all 0.15s;white-space:nowrap;
-  }
-  .btn-revert:hover{background:#E53E3E22;}
-  .btn-revert:active{transform:scale(0.95);}
-
-  /* ③ 番号札セル */
-  .ticket-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:1px;}
-  .ticket-order-num{font-size:0.6rem;color:var(--text-muted);font-family:'Oswald',sans-serif;}
-  .ticket-circle{font-size:2rem;line-height:1;color:#fff;}
-
-  /* ④ チェックボックス */
-  .delivered-cb{
-    appearance:none;-webkit-appearance:none;
-    width:28px;height:28px;border:2px solid var(--border);border-radius:7px;
-    background:var(--bg);cursor:pointer;position:relative;transition:all 0.15s;flex-shrink:0;
-  }
-  .delivered-cb:checked{background:var(--green);border-color:var(--green);}
-  .delivered-cb:checked::after{
-    content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    color:white;font-size:1rem;font-weight:700;
-  }
-  .delivered-cb:active{transform:scale(0.9);}
-  /* 渡し済みの行 */
-  .log-table tbody tr.is-delivered td{opacity:0.38;}
-  .log-table tbody tr.is-delivered td.col-delivered-td{opacity:1;}
-
-  .log-empty{text-align:center;color:var(--text-muted);font-size:0.82rem;padding:40px 20px;}
-
-  /* ── 確認ダイアログ ── */
-  .dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.2s;}
-  .dialog-overlay.visible{opacity:1;pointer-events:all;}
-  .dialog{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:90%;max-width:360px;text-align:center;transform:scale(0.94);transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);}
-  .dialog-overlay.visible .dialog{transform:scale(1);}
-  .dialog-icon{font-size:2.8rem;margin-bottom:12px;}
-  .dialog h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;}
-  .dialog-detail{background:var(--bg);border-radius:10px;padding:12px 14px;margin:14px 0;font-size:0.84rem;line-height:1.7;color:var(--text-muted);text-align:left;}
-  .dialog-detail strong{color:var(--text);}
-  .dialog-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
-  .btn-dialog{padding:12px;border-radius:12px;border:none;font-family:inherit;font-weight:700;font-size:0.92rem;cursor:pointer;transition:transform 0.1s;}
-  .btn-dialog:active{transform:scale(0.96);}
-  .btn-cancel-dialog{background:var(--bg);color:var(--text-muted);border:1px solid var(--border);}
-  .btn-ok-dialog{background:var(--red);color:white;}
-
-  /* 接続待ち */
-  #connecting{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:300;}
-  .spinner{width:46px;height:46px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.9s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  #connecting p{color:var(--text-muted);font-size:0.92rem;}
-
-  .day-badge-hdr{padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;flex-shrink:0;}
-  .day-badge-hdr.day1{background:#3B4CCA;color:white;}
-  .day-badge-hdr.day2{background:#E53E3E;color:white;}
-  ::-webkit-scrollbar{width:4px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-</style>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="stylesheet" href="/css/staff.css">
+  <title>店員画面</title>
 </head>
+
 <body>
 
-<div id="connecting"><div class="spinner"></div><p>サーバーに接続中...</p></div>
-
-<header>
-  <div class="staff-badge">STAFF</div>
-  <h1 id="store-name">読み込み中...</h1>
-  <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
-  <div class="time-display" id="time">--:--</div>
-</header>
-
-<div class="main">
-  <!-- 左パネル -->
-  <div class="status-panel">
-    <div class="stat-card green">
-      <div class="stat-label">売上合計</div>
-      <div class="stat-value">¥<span id="revenue">0</span></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">累計販売数</div>
-      <div class="stat-value"><span id="sales-count">0</span><span class="stat-unit"> 個</span></div>
-    </div>
-    <div class="stock-section">
-      <h3>在庫状況</h3>
-      <div class="stock-list" id="stock-list"></div>
-    </div>
-    <!-- 設定パネル -->
-    <div class="settings-panel" id="settings-panel" style="display:none;">
-      <label>テーマカラー</label>
-      <div class="theme-btns" id="theme-btns"></div>
-      <label style="margin-top:2px;">ロゴ画像</label>
-      <input type="file" id="logo-file-input" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
-      <button class="logo-upload-btn" onclick="document.getElementById('logo-file-input').click()">🖼️ ロゴ画像を変更</button>
-    </div>
-
-    <!-- カウントアップモードボタン -->
-    <button class="mode-btn-cu" id="mode-btn-cu" onclick="toggleCountUpMode()">
-      <span class="mode-dot"></span>
-      <span id="cu-label">カウントアップモード</span>
-    </button>
-
-    <!-- 設定ボタン -->
-    <button class="mode-btn" id="settings-toggle-btn" onclick="toggleSettings()" style="margin-top:4px;">
-      ⚙️ 外観設定
-    </button>
-
-    <!-- ② モード切替ボタン -->
-    <button class="mode-btn" id="mode-btn" onclick="toggleMode()">
-      <span class="mode-dot"></span>
-      <span id="mode-label">通常モード</span>
-    </button>
+  <div id="connecting">
+    <div class="spinner"></div>
+    <p>サーバーに接続中...</p>
   </div>
 
-  <!-- 右パネル -->
-  <div class="right-panel">
+  <header>
+    <div class="staff-badge">STAFF</div>
+    <h1 id="store-name">読み込み中...</h1>
+    <div class="day-badge-hdr day1" id="day-badge-hdr">1日目</div>
+    <div class="time-display" id="time">--:--</div>
+  </header>
 
-    <!-- 決済待ちエリア -->
-    <div class="pending-area" id="pending-area">
-      <div class="pending-idle" id="pending-idle">
-        <div class="idle-icon">⌛</div>
-        <p>客の注文を待っています...</p>
+  <div class="main">
+    <!-- 左パネル -->
+    <div class="status-panel">
+      <div class="stat-card green">
+        <div class="stat-label">売上合計</div>
+        <div class="stat-value">¥<span id="revenue">0</span></div>
       </div>
-    </div>
-
-    <!-- 売上ログ -->
-    <div class="log-panel">
-      <div class="log-header">
-        <h3>📋 売上ログ</h3>
-        <div class="log-count" id="log-count">0件</div>
+      <div class="stat-card">
+        <div class="stat-label">累計販売数</div>
+        <div class="stat-value"><span id="sales-count">0</span><span class="stat-unit"> 個</span></div>
       </div>
-      <div class="log-body" id="log-body">
-        <div class="log-empty">まだ売上がありません</div>
+      <div class="stock-section">
+        <h3>在庫状況</h3>
+        <div class="stock-list" id="stock-list"></div>
       </div>
+      <!-- 設定パネル -->
+      <div class="settings-panel" id="settings-panel" style="display:none;">
+        <label>テーマカラー</label>
+        <div class="theme-btns" id="theme-btns"></div>
+        <label style="margin-top:2px;">ロゴ画像</label>
+        <input type="file" id="logo-file-input" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
+        <button class="logo-upload-btn" onclick="document.getElementById('logo-file-input').click()">🖼️
+          ロゴ画像を変更</button>
+      </div>
+
+      <!-- カウントアップモードボタン -->
+      <button class="mode-btn-cu" id="mode-btn-cu" onclick="toggleCountUpMode()">
+        <span class="mode-dot"></span>
+        <span id="cu-label">カウントアップモード</span>
+      </button>
+
+      <!-- 設定ボタン -->
+      <button class="mode-btn" id="settings-toggle-btn" onclick="toggleSettings()" style="margin-top:4px;">
+        ⚙️ 外観設定
+      </button>
+
+      <!-- ② モード切替ボタン -->
+      <button class="mode-btn" id="mode-btn" onclick="toggleMode()">
+        <span class="mode-dot"></span>
+        <span id="mode-label">通常モード</span>
+      </button>
     </div>
 
-  </div>
-</div>
+    <!-- 右パネル -->
+    <div class="right-panel">
 
-<!-- 取り消し確認ダイアログ -->
-<div class="dialog-overlay" id="dialog-overlay">
-  <div class="dialog">
-    <div class="dialog-icon">⚠️</div>
-    <h3>この取引を取り消しますか？</h3>
-    <div class="dialog-detail" id="dialog-detail"></div>
-    <div class="dialog-btns">
-      <button class="btn-dialog btn-cancel-dialog" onclick="closeDialog()">キャンセル</button>
-      <button class="btn-dialog btn-ok-dialog" onclick="executeRevert()">取り消す</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const params = new URLSearchParams(location.search);
-const STORE_ID = params.get('store') || 'store1';
-const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-
-let ws, salesData = [], pendingRevertIndex = null, numberMode = false;
-
-// 丸数字変換（1〜20）
-const CIRCLE_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
-                     '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
-function toCircle(n) {
-  const r = n % 20;
-  const idx = r === 0 ? 19 : r - 1;
-  return CIRCLE_NUMS[idx];
-}
-function ticketNum(orderNum) { // 1始まりの注文番号 → %20 の丸数字
-  const r = orderNum % 20;
-  return r === 0 ? 20 : r;
-}
-
-// 時計
-setInterval(() => {
-  const now = new Date();
-  document.getElementById('time').textContent =
-    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-}, 1000);
-
-// ── WebSocket ──────────────────────────────────────────────────
-function updateDayBadge(day) {
-  const el = document.getElementById('day-badge-hdr');
-  if (!el) return;
-  el.textContent = day === 2 ? '2日目' : '1日目';
-  el.className = 'day-badge-hdr ' + (day === 2 ? 'day2' : 'day1');
-}
-
-function toggleOverStock(productId) {
-  ws.send(JSON.stringify({ type:'TOGGLE_OVER_STOCK', storeId:STORE_ID, productId }));
-}
-
-function connect() {
-  ws = new WebSocket(WS_URL);
-  ws.onopen = () => ws.send(JSON.stringify({ type:'REGISTER', role:'staff', storeId:STORE_ID }));
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'REGISTERED') { document.getElementById('connecting').style.display = 'none'; if (msg.currentDay) updateDayBadge(msg.currentDay); }
-    if (msg.type === 'STORE_STATE') updateState(msg.store);
-    if (msg.type === 'DAY_STATE') { updateDayBadge(msg.currentDay); }
-    if (msg.type === 'ERROR') alert('エラー: ' + msg.message);
-  };
-  ws.onclose = () => {
-    document.getElementById('connecting').style.display = 'flex';
-    setTimeout(connect, 2000);
-  };
-}
-
-// ── 状態更新 ──────────────────────────────────────────────────
-function updateState(store) {
-  if (store.currentDay) updateDayBadge(store.currentDay);
-  document.getElementById('store-name').textContent = '🎪 ' + store.name;
-  document.getElementById('revenue').textContent = store.totalRevenue.toLocaleString();
-  const totalItems = (store.sales || []).reduce(function(sum, s) { return sum + (s.items || []).reduce(function(s2, i) { return s2 + i.qty; }, 0); }, 0);
-  document.getElementById('sales-count').textContent = totalItems;
-
-  // numberModeをサーバー側の値に同期
-  numberMode = !!store.numberMode;
-  countUpMode = !!store.countUpMode;
-  currentTheme = store.theme || 'orange';
-  // カウントアップモードボタン更新
-  const btnCu = document.getElementById('mode-btn-cu');
-  if (btnCu) {
-    document.getElementById('cu-label').textContent = countUpMode ? 'カウントアップ中（解除）' : 'カウントアップモード';
-    btnCu.classList.toggle('active', countUpMode);
-  }
-  renderThemeBtns();
-  const btn = document.getElementById('mode-btn');
-  document.getElementById('mode-label').textContent = numberMode ? '番号札モード' : '通常モード';
-  btn.classList.toggle('active', numberMode);
-
-  // 在庫
-  document.getElementById('stock-list').innerHTML = store.products.map(p => {
-    const isOver = p.overStock;
-    const showOver = isOver || p.stock <= 0;
-    const countClass = isOver ? ' over' : (p.stock <= 5 ? ' low' : '');
-    const countText = isOver ? '突破中+' + (p.overCount||0) : p.stock;
-    const overBtn = (p.stock <= 0 || isOver) ?
-      '<button class="btn-overstock' + (isOver ? ' active' : '') + '" onclick="toggleOverStock(' + p.id + ')">' +
-      (isOver ? '⚡ 突破モード中（解除）' : '⚡ 上限突破モード') + '</button>' : '';
-    return '<div class="stock-item" style="flex-direction:column;align-items:stretch;gap:4px;">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
-        '<div><div class="stock-name">' + esc(p.name) + '</div><div class="stock-price">¥' + p.price + '</div></div>' +
-        '<div class="stock-count' + countClass + '">' + countText + '</div>' +
-      '</div>' + overBtn +
-    '</div>';
-  }).join('');
-
-  // 決済待ち
-  renderPendingArea(store.pendingPayment);
-
-  // 売上ログ
-  salesData = store.sales || [];
-  renderLog();
-}
-
-// ② モード切替
-function toggleMode() {
-  ws.send(JSON.stringify({ type:'SET_NUMBER_MODE', storeId:STORE_ID, numberMode:!numberMode }));
-}
-
-// カウントアップモード切替
-function toggleCountUpMode() {
-  if (!countUpMode) {
-    // オンにする時だけ警告
-    if (!confirm(
-      'カウントアップモードに切り替えますか？\n\n' +
-      '・在庫数は減算されず、売上数をカウントアップします\n' +
-      '・目標数を超えると客画面に突破バナーが表示されます\n' +
-      '・モードを解除するとカウントはリセットされます'
-    )) return;
-  }
-  ws.send(JSON.stringify({ type:'SET_COUNT_UP_MODE', storeId:STORE_ID, countUpMode:!countUpMode }));
-}
-
-// 設定パネル開閉
-function toggleSettings() {
-  const panel = document.getElementById('settings-panel');
-  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-}
-
-// テーマ色定義
-const THEMES = {
-  orange:'#E94560', red:'#E53E3E', blue:'#3B82F6',
-  green:'#10B981', purple:'#8B5CF6', dark:'#374151'
-};
-
-function renderThemeBtns() {
-  const wrap = document.getElementById('theme-btns');
-  if (!wrap) return;
-  wrap.innerHTML = Object.entries(THEMES).map(function(e) {
-    var key = e[0], color = e[1];
-    return '<div class="theme-dot' + (currentTheme === key ? ' selected' : '') + '" style="background:' + color + ';" onclick="setTheme(\'' + key + '\')" title="' + key + '"></div>';
-  }).join('');
-}
-
-function setTheme(theme) {
-  ws.send(JSON.stringify({ type:'UPDATE_THEME', storeId:STORE_ID, theme }));
-}
-
-// ロゴアップロード
-function uploadLogo(input) {
-  if (!input.files[0]) return;
-  const file = input.files[0];
-  const formData = new FormData();
-  formData.append('storeId', STORE_ID);
-  formData.append('field', 'logo');
-  formData.append('file', file);
-  fetch('/api/upload', { method:'POST', body:formData })
-    .then(r => r.json())
-    .then(d => { if (d.url) ws.send(JSON.stringify({ type:'UPDATE_LOGO', storeId:STORE_ID, logo: d.url })); })
-    .catch(e => alert('アップロード失敗: ' + e.message));
-}
-
-// ── 決済待ちパネル ────────────────────────────────────────────
-function renderPendingArea(pending) {
-  const area = document.getElementById('pending-area');
-  document.getElementById('pending-idle').style.display = pending ? 'none' : '';
-  const old = document.getElementById('payment-panel');
-  if (old) old.remove();
-  if (!pending) return;
-
-  const methodLabel = pending.method === 'paypay' ? '📱 PayPay' : '💴 現金';
-  const methodClass = pending.method === 'paypay' ? 'method-paypay' : 'method-cash';
-  const panel = document.createElement('div');
-  panel.id = 'payment-panel';
-  panel.className = 'payment-panel';
-  panel.innerHTML = `
-    <div class="payment-panel-header">
-      <div class="payment-method-tag ${methodClass}">${methodLabel}</div>
-      <div class="waiting-label">決済待ち</div>
-      <div class="waiting-dot"></div>
-    </div>
-    <div class="payment-items">
-      ${pending.items.map(i => `
-        <div class="payment-item">
-          <div><span class="pi-name">${esc(i.name)}</span><span class="pi-qty">× ${i.qty}</span></div>
-          <div class="pi-price">¥${(i.price*i.qty).toLocaleString()}</div>
-        </div>`).join('')}
-    </div>
-    <div class="payment-total">
-      <span class="pt-label">お会計</span>
-      <span class="pt-amount">¥${pending.total.toLocaleString()}</span>
-    </div>
-    <button class="btn-confirm" onclick="confirmPayment()">✅ 決済が完了した</button>`;
-  area.appendChild(panel);
-}
-
-function confirmPayment() {
-  ws.send(JSON.stringify({ type:'CONFIRM_PAYMENT', storeId:STORE_ID }));
-}
-
-// ── 売上ログ描画 ──────────────────────────────────────────────
-function renderLog() {
-  const body = document.getElementById('log-body');
-  document.getElementById('log-count').textContent = salesData.length + '件';
-
-  if (!salesData.length) {
-    body.innerHTML = '<div class="log-empty">まだ売上がありません</div>';
-    return;
-  }
-
-  // 全取引に登場するすべての商品を列として収集（登場順）
-  const productMap = {};
-  salesData.forEach(s => {
-    s.items.forEach(item => {
-      if (!(item.id in productMap)) productMap[item.id] = item.name;
-    });
-  });
-  const productIds = Object.keys(productMap);
-  const productNames = productIds.map(id => productMap[id]);
-
-  // ヘッダー行構築
-  const ticketHeader = numberMode
-    ? '<th class="col-ticket">番号札</th><th class="col-delivered">渡</th>'
-    : '';
-  const headerCells = [
-    '<th class="col-fixed col-num">#</th>',
-    ticketHeader,
-    '<th class="col-fixed col-time">時刻</th>',
-    '<th class="col-method">支払</th>',
-    ...productNames.map(name => `<th title="${esc(name)}">${esc(name.length > 6 ? name.slice(0,5)+'…' : name)}</th>`),
-    '<th class="col-total">合計</th>',
-    '<th class="col-revert"></th>',
-  ].join('');
-
-  // データ行構築（新しい順）
-  const rows = [...salesData].map((s, i) => ({ ...s, origIndex: i })).reverse();
-  const dataRows = rows.map((s, revI) => {
-    const num = salesData.length - revI;  // 1始まりの注文番号
-    const time = new Date(s.time).toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit' });
-    const methodClass = s.method === 'paypay' ? 'paypay' : 'cash';
-    const methodLabel = s.method === 'paypay' ? 'PayPay' : '現金';
-    const isDelivered = !!s.delivered;
-
-    // ③④ 番号札モード列
-    const tn = ticketNum(num);
-    const ticketCells = numberMode ? `
-      <td class="col-ticket" style="padding:0 2px;">
-        <div class="ticket-cell">
-          <div class="ticket-order-num">#${num}</div>
-          <div class="ticket-circle">${CIRCLE_NUMS[tn-1]}</div>
+      <!-- 決済待ちエリア -->
+      <div class="pending-area" id="pending-area">
+        <div class="pending-idle" id="pending-idle">
+          <div class="idle-icon">⌛</div>
+          <p>客の注文を待っています...</p>
         </div>
-      </td>
-      <td class="col-delivered-td col-delivered" style="text-align:center;vertical-align:middle;">
-        <input type="checkbox" class="delivered-cb" ${isDelivered ? 'checked' : ''}
-          onchange="toggleDelivered(${s.origIndex})" onclick="event.stopPropagation()">
-      </td>` : '';
+      </div>
 
-    // 各商品列のセル
-    const qtyCells = productIds.map(pid => {
-      const found = s.items.find(i => String(i.id) === String(pid));
-      const qty = found ? found.qty : 0;
-      return qty > 0
-        ? `<td class="qty-pos">${qty}</td>`
-        : `<td class="qty-zero">—</td>`;
-    }).join('');
+      <!-- 売上ログ -->
+      <div class="log-panel">
+        <div class="log-header">
+          <h3>📋 売上ログ</h3>
+          <div class="log-count" id="log-count">0件</div>
+        </div>
+        <div class="log-body" id="log-body">
+          <div class="log-empty">まだ売上がありません</div>
+        </div>
+      </div>
 
-    return `<tr id="log-row-${s.origIndex}" class="${isDelivered ? 'is-delivered' : ''}">
-      <td class="col-fixed col-num">#${num}</td>
-      ${ticketCells}
-      <td class="col-fixed col-time">${time}</td>
-      <td class="col-method"><span class="log-method ${methodClass}">${methodLabel}</span></td>
-      ${qtyCells}
-      <td class="col-total">¥${s.total.toLocaleString()}</td>
-      <td class="col-revert"><button class="btn-revert" onclick="openDialog(${s.origIndex})">取消</button></td>
-    </tr>`;
-  }).join('');
+    </div>
+  </div>
 
-  body.innerHTML = `<table class="log-table">
-    <thead><tr>${headerCells}</tr></thead>
-    <tbody>${dataRows}</tbody>
-  </table>`;
-}
+  <!-- 取り消し確認ダイアログ -->
+  <div class="dialog-overlay" id="dialog-overlay">
+    <div class="dialog">
+      <div class="dialog-icon">⚠️</div>
+      <h3>この取引を取り消しますか？</h3>
+      <div class="dialog-detail" id="dialog-detail"></div>
+      <div class="dialog-btns">
+        <button class="btn-dialog btn-cancel-dialog" onclick="closeDialog()">キャンセル</button>
+        <button class="btn-dialog btn-ok-dialog" onclick="executeRevert()">取り消す</button>
+      </div>
+    </div>
+  </div>
 
-// ④ 受け渡しチェック
-function toggleDelivered(saleIndex) {
-  ws.send(JSON.stringify({ type:'TOGGLE_DELIVERED', storeId:STORE_ID, saleIndex }));
-}
-
-// ── 取り消しダイアログ ────────────────────────────────────────
-function openDialog(saleIndex) {
-  const s = salesData[saleIndex];
-  if (!s) return;
-  pendingRevertIndex = saleIndex;
-  const time = new Date(s.time).toLocaleTimeString('ja-JP', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  document.getElementById('dialog-detail').innerHTML =
-    `<strong>時刻:</strong> ${time}<br>` +
-    `<strong>支払:</strong> ${s.method === 'paypay' ? 'PayPay' : '現金'}<br>` +
-    `<strong>商品:</strong><br>${s.items.map(i => `　${esc(i.name)} × ${i.qty} = ¥${(i.price*i.qty).toLocaleString()}`).join('<br>')}<br>` +
-    `<strong>合計: ¥${s.total.toLocaleString()}</strong>`;
-  document.getElementById('dialog-overlay').classList.add('visible');
-}
-
-function closeDialog() {
-  document.getElementById('dialog-overlay').classList.remove('visible');
-  pendingRevertIndex = null;
-}
-
-function executeRevert() {
-  if (pendingRevertIndex === null) return;
-  ws.send(JSON.stringify({ type:'REVERT_SALE', storeId:STORE_ID, saleIndex:pendingRevertIndex }));
-  closeDialog();
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-connect();
-</script>
+  <script src="/js/staff.js"></script>
 </body>
+
 </html>

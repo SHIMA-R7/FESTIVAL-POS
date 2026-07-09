@@ -87,7 +87,7 @@ function defaultStore(name) {
     products: [
       { id: 1, name: '商品A', price: 200, stock1: 50, stock2: 50, active1: true, active2: true, image: null },
       { id: 2, name: '商品B', price: 300, stock1: 30, stock2: 30, active1: true, active2: true, image: null },
-      { id: 3, name: '商品C', price: 150, stock1:100, stock2:100, active1: true, active2: true, image: null },
+      { id: 3, name: '商品C', price: 150, stock1: 100, stock2: 100, active1: true, active2: true, image: null },
       { id: 4, name: '商品D', price: 500, stock1: 20, stock2: 20, active1: true, active2: true, image: null },
     ],
     sales1: [], sales2: [], totalRevenue1: 0, totalRevenue2: 0, pendingPayment: null,
@@ -211,8 +211,8 @@ function storePayload(storeId) {
       overCount: day === 1 ? (p.overCount1 || 0) : (p.overCount2 || 0),
       sold: day === 1 ? (p.sold1 || 0) : (p.sold2 || 0),
     }));
-  const sales    = day === 1 ? (store.sales1 || [])         : (store.sales2 || []);
-  const revenue  = day === 1 ? (store.totalRevenue1 || 0)   : (store.totalRevenue2 || 0);
+  const sales = day === 1 ? (store.sales1 || []) : (store.sales2 || []);
+  const revenue = day === 1 ? (store.totalRevenue1 || 0) : (store.totalRevenue2 || 0);
   return {
     type: 'STORE_STATE', store: {
       name: store.name, logo: store.logo, products,
@@ -311,7 +311,7 @@ wss.on('connection', (ws) => {
         const total = items.reduce((s, i) => s + i.price * i.qty, 0);
         for (const item of items) {
           const p = store.products.find(p => p.id === item.id);
-          const stock = p ? (currentDay === 1 ? (p.stock1||0) : (p.stock2||0)) : 0;
+          const stock = p ? (currentDay === 1 ? (p.stock1 || 0) : (p.stock2 || 0)) : 0;
           const isOver = p && p.overStock;
           const isCU = stores[storeId] && stores[storeId].countUpMode;
           if (!p || (!isOver && !isCU && stock < item.qty)) { ws.send(JSON.stringify({ type: 'ERROR', message: item.name + 'の在庫が不足しています' })); return; }
@@ -328,25 +328,25 @@ wss.on('connection', (ws) => {
             const store2 = stores[storeId];
             if (store2 && store2.countUpMode) {
               // カウントアップモード: sold数をインクリメント（stock減算なし）
-              if (currentDay === 1) p.sold1 = (p.sold1||0) + item.qty;
-              else                  p.sold2 = (p.sold2||0) + item.qty;
+              if (currentDay === 1) p.sold1 = (p.sold1 || 0) + item.qty;
+              else p.sold2 = (p.sold2 || 0) + item.qty;
             } else if (p.overStock) {
-              if (currentDay === 1) p.overCount1 = (p.overCount1||0) + item.qty;
-              else                  p.overCount2 = (p.overCount2||0) + item.qty;
+              if (currentDay === 1) p.overCount1 = (p.overCount1 || 0) + item.qty;
+              else p.overCount2 = (p.overCount2 || 0) + item.qty;
             } else {
-              if (currentDay === 1) p.stock1 = Math.max(0, (p.stock1||0) - item.qty);
-              else                  p.stock2 = Math.max(0, (p.stock2||0) - item.qty);
+              if (currentDay === 1) p.stock1 = Math.max(0, (p.stock1 || 0) - item.qty);
+              else p.stock2 = Math.max(0, (p.stock2 || 0) - item.qty);
             }
           }
         }
         if (currentDay === 1) {
           if (!store.sales1) store.sales1 = [];
           store.sales1.push({ items, total, method, time: new Date().toISOString(), delivered: false });
-          store.totalRevenue1 = (store.totalRevenue1||0) + total;
+          store.totalRevenue1 = (store.totalRevenue1 || 0) + total;
         } else {
           if (!store.sales2) store.sales2 = [];
           store.sales2.push({ items, total, method, time: new Date().toISOString(), delivered: false });
-          store.totalRevenue2 = (store.totalRevenue2||0) + total;
+          store.totalRevenue2 = (store.totalRevenue2 || 0) + total;
         }
         store.pendingPayment = null;
         saveAndBroadcast(storeId); break;
@@ -358,7 +358,7 @@ wss.on('connection', (ws) => {
       case 'RESET_SALES': {
         const store = stores[storeId]; if (!store) return;
         if (currentDay === 1) { store.sales1 = []; store.totalRevenue1 = 0; }
-        else                  { store.sales2 = []; store.totalRevenue2 = 0; }
+        else { store.sales2 = []; store.totalRevenue2 = 0; }
         store.pendingPayment = null;
         saveAndBroadcast(storeId); break;
       }
@@ -386,8 +386,8 @@ wss.on('connection', (ws) => {
         const store = stores[storeId]; if (!store) return;
         // adminから日指定がある場合はその日を、なければcurrentDayを使う
         const reqDay = (msg.day === 1 || msg.day === 2) ? msg.day : currentDay;
-        const sales   = reqDay === 1 ? (store.sales1||[])       : (store.sales2||[]);
-        const revenue = reqDay === 1 ? (store.totalRevenue1||0) : (store.totalRevenue2||0);
+        const sales = reqDay === 1 ? (store.sales1 || []) : (store.sales2 || []);
+        const revenue = reqDay === 1 ? (store.totalRevenue1 || 0) : (store.totalRevenue2 || 0);
         ws.send(JSON.stringify({ type: 'SALES_DATA', sales, totalRevenue: revenue, currentDay: reqDay })); break;
       }
       case 'REVERT_SALE': {
@@ -400,16 +400,16 @@ wss.on('connection', (ws) => {
           const p = store.products.find(p => p.id === item.id);
           if (p) {
             if (p.overStock) {
-              if (currentDay === 1) p.overCount1 = Math.max(0, (p.overCount1||0) - item.qty);
-              else                  p.overCount2 = Math.max(0, (p.overCount2||0) - item.qty);
+              if (currentDay === 1) p.overCount1 = Math.max(0, (p.overCount1 || 0) - item.qty);
+              else p.overCount2 = Math.max(0, (p.overCount2 || 0) - item.qty);
             } else {
-              if (currentDay === 1) p.stock1 = (p.stock1||0) + item.qty;
-              else                  p.stock2 = (p.stock2||0) + item.qty;
+              if (currentDay === 1) p.stock1 = (p.stock1 || 0) + item.qty;
+              else p.stock2 = (p.stock2 || 0) + item.qty;
             }
           }
         }
-        if (currentDay === 1) { store.totalRevenue1 = (store.totalRevenue1||0) - sale.total; store.sales1.splice(idx, 1); }
-        else                  { store.totalRevenue2 = (store.totalRevenue2||0) - sale.total; store.sales2.splice(idx, 1); }
+        if (currentDay === 1) { store.totalRevenue1 = (store.totalRevenue1 || 0) - sale.total; store.sales1.splice(idx, 1); }
+        else { store.totalRevenue2 = (store.totalRevenue2 || 0) - sale.total; store.sales2.splice(idx, 1); }
         saveAndBroadcast(storeId); break;
       }
       case 'RENAME_STORE': {
@@ -438,7 +438,7 @@ wss.on('connection', (ws) => {
         const targets = targetId ? [targetId] : Object.keys(stores);
         // masterから初期在庫を読み込む
         let master = {};
-        try { master = JSON.parse(require('fs').readFileSync(MASTER_FILE, 'utf8')); } catch(e) { console.error('master読込失敗:', e.message); }
+        try { master = JSON.parse(require('fs').readFileSync(MASTER_FILE, 'utf8')); } catch (e) { console.error('master読込失敗:', e.message); }
         for (const sid of targets) {
           const store = stores[sid];
           if (!store) continue;
@@ -446,7 +446,7 @@ wss.on('connection', (ws) => {
           if (master[sid]) master[sid].products.forEach(p => masterProds[p.id] = p);
           store.products = store.products.map(p => {
             const mp = masterProds[p.id];
-            const np = {...p};
+            const np = { ...p };
             if (reqDay === 1 || reqDay === 'both') {
               np.stock1 = mp ? mp.stock1 : p.stock1;
               np.active1 = mp ? mp.active1 : p.active1;
