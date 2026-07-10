@@ -23,10 +23,17 @@
 html,
 body {
     height: 100%;
+    min-height: 100%;
+    min-height: 100dvh;
     overflow: hidden;
     background: var(--bg);
     font-family: 'Noto Sans JP', sans-serif;
     color: var(--text);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
 }
 
 header {
@@ -64,7 +71,9 @@ header h1 {
 
 .main {
     display: flex;
-    height: calc(100vh - 58px);
+    flex: 1;
+    min-height: 0;
+    height: calc(100dvh - 58px);
     overflow: hidden;
 }
 
@@ -75,9 +84,10 @@ header h1 {
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 16px 14px;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom)) 14px;
     gap: 14px;
     flex-shrink: 0;
+    min-height: 0;
 }
 
 .stat-card {
