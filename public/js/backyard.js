@@ -2,7 +2,7 @@ const params = new URLSearchParams(location.search);
 const STORE_ID = params.get('store') || 'store1';
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 
-let ws, salesData = [], numberMode = false;
+let ws, salesData = [], numberMode = false, countUpMode = false;
 
 const CIRCLE_NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
     '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳'];
@@ -50,15 +50,38 @@ function updateState(store) {
     document.getElementById('sales-count').textContent = store.salesCount;
 
     numberMode = !!store.numberMode;
+    countUpMode = !!store.countUpMode;
     const ind = document.getElementById('mode-indicator');
-    document.getElementById('mode-label').textContent = numberMode ? '番号札モード' : '通常モード';
+    const labelWrap = document.getElementById('mode-label-wrap');
+    const modeLabelEl = document.getElementById('mode-label');
+    if (modeLabelEl) modeLabelEl.textContent = numberMode ? '番号札モード' : '通常モード';
     ind.classList.toggle('active', numberMode);
+    if (labelWrap) labelWrap.classList.toggle('active', numberMode);
+    // カウントアップ状態表示
+    const cuEl = document.getElementById('cu-indicator');
+    if (cuEl) {
+        cuEl.textContent = countUpMode ? 'カウントアップ中' : '通常運用';
+        cuEl.classList.toggle('active', countUpMode);
+    }
 
-    document.getElementById('stock-list').innerHTML = store.products.map(p => `
-    <div class="stock-item">
-      <div><div class="stock-name">${esc(p.name)}</div><div class="stock-price">¥${p.price}</div></div>
-      <div class="stock-count${p.stock <= 5 ? ' low' : ''}">${p.stock}</div>
-    </div>`).join('');
+    const stockTitle = document.getElementById('stock-section-title');
+    if (stockTitle) {
+        stockTitle.textContent = countUpMode ? '個別販売数' : '在庫状況';
+    }
+
+    document.getElementById('stock-list').innerHTML = store.products.map(p => {
+        const isOver = p.overStock;
+        const soldCount = p.sold || 0;
+        const initialStock = (p.stock || 0) + soldCount;
+        const displayStock = countUpMode ? soldCount : Math.max(0, initialStock - soldCount);
+        const stockNumStyle = isOver ? ' over' : (countUpMode ? '' : (displayStock <= 5 ? ' low' : ''));
+        const stockNum = isOver ? '突破中+' + (p.overCount || 0) : displayStock;
+        return `
+        <div class="stock-item">
+          <div><div class="stock-name">${esc(p.name)}</div><div class="stock-price">¥${p.price}</div></div>
+          <div class="stock-count${stockNumStyle}">${stockNum}</div>
+        </div>`;
+    }).join('');
 
     salesData = store.sales || [];
     renderLog();
@@ -91,7 +114,7 @@ function renderLog() {
         ticketHeader,
         '<th class="col-fixed col-time">時刻</th>',
         '<th class="col-method">支払</th>',
-        ...productNames.map(name => `<th title="${esc(name)}">${esc(name.length > 6 ? name.slice(0, 5) + '…' : name)}</th>`),
+        ...productNames.map(name => `<th title="${esc(name)}">${esc(name)}</th>`),
         '<th class="col-total">合計</th>',
         // ⑤ 取消列なし
     ].join('');
