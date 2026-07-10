@@ -2,7 +2,7 @@ const params = new URLSearchParams(location.search);
 const STORE_ID = params.get('store') || 'store1';
 const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
 
-let ws, salesData = [], pendingRevertIndex = null, numberMode = false;
+let ws, salesData = [], pendingRevertIndex = null, numberMode = false, countUpMode = false, currentTheme = 'orange';
 
 // 丸数字変換（1〜20）
 const CIRCLE_NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
@@ -75,18 +75,19 @@ function updateState(store) {
     document.getElementById('mode-label').textContent = numberMode ? '番号札モード' : '通常モード';
     btn.classList.toggle('active', numberMode);
 
-    if(!!countUpMode){
-        document.getElementById('stock-list-title').innerHTML = '個別販売数'
-    } else {
-        document.getElementById('stock-list-title').innerHTML = '在庫残り'
-    }
+    // 在庫セクションの見出し（カウントアップ中は「売上個数」表示に切り替え）
+    const stockTitle = document.getElementById('stock-section-title');
+    if (stockTitle) stockTitle.textContent = countUpMode ? '売上個数' : '在庫状況';
 
     // 在庫
     document.getElementById('stock-list').innerHTML = store.products.map(p => {
         const isOver = p.overStock;
         const showOver = isOver || p.stock <= 0;
-        const countClass = isOver ? ' over' : (p.stock <= 5 ? ' low' : '');
-        const countText = isOver ? '突破中+' + (p.overCount || 0) : p.stock;
+        // カウントアップモード中は「残り在庫」ではなく「売上数」を表示する。
+        // スタイル(low/over)の判定は、カウントアップ中でも残り在庫(stock - sold)を基準にする。
+        const remaining = countUpMode ? (p.stock - (p.sold || 0)) : p.stock;
+        const countClass = isOver ? ' over' : (remaining <= 5 ? ' low' : '');
+        const countText = isOver ? '突破中+' + (p.overCount || 0) : (countUpMode ? (p.sold || 0) : p.stock);
         const overBtn = (p.stock <= 0 || isOver) ?
             '<button class="btn-overstock' + (isOver ? ' active' : '') + '" onclick="toggleOverStock(' + p.id + ')">' +
             (isOver ? '⚡ 突破モード中（解除）' : '⚡ 上限突破モード') + '</button>' : '';
@@ -114,12 +115,20 @@ function toggleMode() {
 // カウントアップモード切替
 function toggleCountUpMode() {
     if (!countUpMode) {
-        // オンにする時だけ警告
+        // オンにする時の警告
         if (!confirm(
             'カウントアップモードに切り替えますか？\n\n' +
             '・在庫数は減算されず、売上数をカウントアップします\n' +
             '・目標数を超えると客画面に突破バナーが表示されます\n' +
             '・モードを解除するとカウントはリセットされます'
+        )) return;
+    } else {
+        // オフにする（通常モードに戻す）時の警告
+        if (!confirm(
+            '通常モードに戻しますか？\n\n' +
+            '・これまでのカウントアップの売上数はリセットされます（0に戻ります）\n' +
+            '・在庫は通常モード時点の残数から再開されます\n' +
+            'よろしいですか？'
         )) return;
     }
     ws.send(JSON.stringify({ type: 'SET_COUNT_UP_MODE', storeId: STORE_ID, countUpMode: !countUpMode }));

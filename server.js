@@ -330,12 +330,15 @@ wss.on('connection', (ws) => {
               // カウントアップモード: sold数をインクリメント（stock減算なし）
               if (currentDay === 1) p.sold1 = (p.sold1 || 0) + item.qty;
               else p.sold2 = (p.sold2 || 0) + item.qty;
+              item.saleMode = 'countUp'; // ← 取り消し時にどう戻すか判定するための記録
             } else if (p.overStock) {
               if (currentDay === 1) p.overCount1 = (p.overCount1 || 0) + item.qty;
               else p.overCount2 = (p.overCount2 || 0) + item.qty;
+              item.saleMode = 'overStock';
             } else {
               if (currentDay === 1) p.stock1 = Math.max(0, (p.stock1 || 0) - item.qty);
               else p.stock2 = Math.max(0, (p.stock2 || 0) - item.qty);
+              item.saleMode = 'normal';
             }
           }
         }
@@ -398,14 +401,19 @@ wss.on('connection', (ws) => {
         const sale = sales[idx];
         for (const item of sale.items) {
           const p = store.products.find(p => p.id === item.id);
-          if (p) {
-            if (p.overStock) {
-              if (currentDay === 1) p.overCount1 = Math.max(0, (p.overCount1 || 0) - item.qty);
-              else p.overCount2 = Math.max(0, (p.overCount2 || 0) - item.qty);
-            } else {
-              if (currentDay === 1) p.stock1 = (p.stock1 || 0) + item.qty;
-              else p.stock2 = (p.stock2 || 0) + item.qty;
-            }
+          if (!p) continue;
+          // 売れた"当時"のモード(saleMode)で戻す。古いデータ(saleMode未記録)は
+          // 現在のoverStockフラグから best-effort で推測する（後方互換）。
+          const mode = item.saleMode || (p.overStock ? 'overStock' : 'normal');
+          if (mode === 'countUp') {
+            if (currentDay === 1) p.sold1 = Math.max(0, (p.sold1 || 0) - item.qty);
+            else p.sold2 = Math.max(0, (p.sold2 || 0) - item.qty);
+          } else if (mode === 'overStock') {
+            if (currentDay === 1) p.overCount1 = Math.max(0, (p.overCount1 || 0) - item.qty);
+            else p.overCount2 = Math.max(0, (p.overCount2 || 0) - item.qty);
+          } else {
+            if (currentDay === 1) p.stock1 = (p.stock1 || 0) + item.qty;
+            else p.stock2 = (p.stock2 || 0) + item.qty;
           }
         }
         if (currentDay === 1) { store.totalRevenue1 = (store.totalRevenue1 || 0) - sale.total; store.sales1.splice(idx, 1); }
