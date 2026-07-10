@@ -99,14 +99,33 @@ function updateState(store) {
     renderLog();
 
     // 在庫
+    const isCUMode = !!store.countUpMode;
     document.getElementById('stock-list').innerHTML = store.products.map(p => {
-        const isOver = p.overStock; // 上限突破モード中かどうか
-        const showOver = isOver || p.stock <= 0; // 上限突破ボタンを表示するかどうか
-        const stockNumStyle = isOver ? ' over' : (p.stock <= 5 ? ' low' : ''); //
-        const stockNum = isOver ? '突破中+' + (p.overCount || 0) : p.stock;
-        const overBtn = (p.stock <= 0 || isOver) ?
-            '<button class="btn-overstock' + (isOver ? ' active' : '') + '" onclick="toggleOverStock(' + p.id + ')">' +
-            (isOver ? '⚡ 突破モード中（解除）' : '⚡ 上限突破モード') + '</button>' : '';
+        const isOver = p.overStock;
+        const initStock = p.initStock || 0;
+        const sold = p.sold || 0;
+        const remaining = Math.max(0, initStock - sold);
+
+        let stockNum, stockNumStyle, overBtn = '';
+
+        if (isOver) {
+            stockNum = '突破中+' + (p.overCount || 0);
+            stockNumStyle = ' over';
+        } else if (isCUMode) {
+            // カウントアップモード: 売れた数を表示
+            stockNum = sold;
+            stockNumStyle = sold >= initStock ? ' over' : '';
+        } else {
+            // カウントダウンモード: initStock - sold = 残り数
+            stockNum = remaining;
+            stockNumStyle = remaining <= 5 ? ' low' : '';
+        }
+
+        if (!isCUMode && (remaining <= 0 || isOver)) {
+            overBtn = '<button class="btn-overstock' + (isOver ? ' active' : '') + '" onclick="toggleOverStock(' + p.id + ')">' +
+                (isOver ? '⚡ 突破モード中（解除）' : '⚡ 上限突破モード') + '</button>';
+        }
+
         return '<div class="stock-item" style="flex-direction:column;align-items:stretch;gap:4px;">' +
             '<div style="display:flex;align-items:center;justify-content:space-between;">' +
             '<div><div class="stock-name">' + esc(p.name) + '</div><div class="stock-price">¥' + p.price + '</div></div>' +
