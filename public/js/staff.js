@@ -102,8 +102,11 @@ function updateState(store) {
     document.getElementById('stock-list').innerHTML = store.products.map(p => {
         const isOver = p.overStock; // 上限突破モード中かどうか
         const showOver = isOver || p.stock <= 0; // 上限突破ボタンを表示するかどうか
-        const stockNumStyle = isOver ? ' over' : (p.stock <= 5 ? ' low' : ''); //
-        const stockNum = isOver ? '突破中+' + (p.overCount || 0) : p.stock;
+        const soldCount = p.sold || 0;
+        const initialStock = (p.stock || 0) + soldCount;
+        const displayStock = countUpMode ? soldCount : Math.max(0, initialStock - soldCount);
+        const stockNumStyle = isOver ? ' over' : (countUpMode ? '' : (displayStock <= 5 ? ' low' : ''));
+        const stockNum = isOver ? '突破中+' + (p.overCount || 0) : displayStock;
         const overBtn = (p.stock <= 0 || isOver) ?
             '<button class="btn-overstock' + (isOver ? ' active' : '') + '" onclick="toggleOverStock(' + p.id + ')">' +
             (isOver ? '⚡ 突破モード中（解除）' : '⚡ 上限突破モード') + '</button>' : '';
