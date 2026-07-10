@@ -58,7 +58,7 @@ function updateState(store) {
     // バナー表示制御
     const isCountUpMode = !!store.countUpMode;
     const hasOver = (products || []).some(p => p.overStock);
-    const hasBurst = isCountUpMode && (products || []).some(p => p.sold >= p.stock);
+    const hasBurst = (products || []).some(p => (p.sold || 0) >= p.stock);
     const banner = document.getElementById('over-banner');
     if (banner) {
         if (hasOver) {
@@ -167,7 +167,7 @@ function renderProducts() {
         const qty = inCart ? cart[p.id].qty : 0;
         const oos = !isOver && !isCU && p.stock <= 0;
         const low = !isOver && !isCU && p.stock > 0 && p.stock <= 5;
-        const cuBurst = isCU && (p.sold || 0) >= p.stock; // カウントアップで目標超過
+        const cuBurst = (p.sold || 0) >= p.stock;
 
         els.card.classList.toggle('in-cart', !!inCart);
         els.card.classList.toggle('out-of-stock', oos);
@@ -177,9 +177,8 @@ function renderProducts() {
         els.badge.classList.toggle('visible', !!inCart);
 
         if (isCU) {
-            // カウントアップモード: 売れた数/目標数を表示
-            //els.stockEl.textContent = cuBurst ? ('目標達成+' + ((p.sold || 0) - p.stock) + '個') : ('販売中 ' + (p.sold || 0) + '/' + p.stock + '個');
-            //els.stockEl.className = 'product-stock' + (cuBurst ? ' over-mode' : '');
+            els.stockEl.textContent = cuBurst ? ('目標達成+' + ((p.sold || 0) - p.stock) + '個') : ('販売中 ' + (p.sold || 0) + '/' + p.stock + '個');
+            els.stockEl.className = 'product-stock' + (cuBurst ? ' over-mode' : '');
         } else if (isOver) {
             els.stockEl.textContent = '⚡ 突破中';
             els.stockEl.className = 'product-stock over-mode';

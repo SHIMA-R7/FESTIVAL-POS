@@ -75,6 +75,20 @@ function saveData() {
   catch (e) { console.error('データ保存エラー:', e.message); }
 }
 
+function getProductSalesCount(product, day) {
+  return day === 1 ? (product.sold1 || 0) : (product.sold2 || 0);
+}
+
+function incrementProductSalesCount(product, day, qty) {
+  if (day === 1) product.sold1 = (product.sold1 || 0) + qty;
+  else product.sold2 = (product.sold2 || 0) + qty;
+}
+
+function decrementProductSalesCount(product, day, qty) {
+  if (day === 1) product.sold1 = Math.max(0, (product.sold1 || 0) - qty);
+  else product.sold2 = Math.max(0, (product.sold2 || 0) - qty);
+}
+
 function saveAndBroadcast(storeId) { saveData(); broadcastStoreState(storeId); }
 
 loadData();
@@ -326,11 +340,9 @@ wss.on('connection', (ws) => {
           const p = store.products.find(p => p.id === item.id);
           if (p) {
             const store2 = stores[storeId];
+            incrementProductSalesCount(p, currentDay, item.qty);
             if (store2 && store2.countUpMode) {
-              // カウントアップモード: sold数をインクリメント（stock減算なし）
-              if (currentDay === 1) p.sold1 = (p.sold1 || 0) + item.qty;
-              else p.sold2 = (p.sold2 || 0) + item.qty;
-              item.saleMode = 'countUp'; // ← 取り消し時にどう戻すか判定するための記録
+              item.saleMode = 'countUp';
             } else if (p.overStock) {
               if (currentDay === 1) p.overCount1 = (p.overCount1 || 0) + item.qty;
               else p.overCount2 = (p.overCount2 || 0) + item.qty;
@@ -406,8 +418,7 @@ wss.on('connection', (ws) => {
           // 現在のoverStockフラグから best-effort で推測する（後方互換）。
           const mode = item.saleMode || (p.overStock ? 'overStock' : 'normal');
           if (mode === 'countUp') {
-            if (currentDay === 1) p.sold1 = Math.max(0, (p.sold1 || 0) - item.qty);
-            else p.sold2 = Math.max(0, (p.sold2 || 0) - item.qty);
+            // カウントアップモードでは在庫は減らさない
           } else if (mode === 'overStock') {
             if (currentDay === 1) p.overCount1 = Math.max(0, (p.overCount1 || 0) - item.qty);
             else p.overCount2 = Math.max(0, (p.overCount2 || 0) - item.qty);
@@ -415,6 +426,7 @@ wss.on('connection', (ws) => {
             if (currentDay === 1) p.stock1 = (p.stock1 || 0) + item.qty;
             else p.stock2 = (p.stock2 || 0) + item.qty;
           }
+          decrementProductSalesCount(p, currentDay, item.qty);
         }
         if (currentDay === 1) { store.totalRevenue1 = (store.totalRevenue1 || 0) - sale.total; store.sales1.splice(idx, 1); }
         else { store.totalRevenue2 = (store.totalRevenue2 || 0) - sale.total; store.sales2.splice(idx, 1); }
@@ -504,10 +516,6 @@ wss.on('connection', (ws) => {
       case 'SET_COUNT_UP_MODE': {
         if (!stores[storeId]) return;
         stores[storeId].countUpMode = !!msg.countUpMode;
-        // カウントアップモードOFF時はsold数をリセット
-        if (!msg.countUpMode) {
-          stores[storeId].products.forEach(p => { p.sold1 = 0; p.sold2 = 0; });
-        }
         saveAndBroadcast(storeId); break;
       }
       case 'SET_NUMBER_MODE': {
