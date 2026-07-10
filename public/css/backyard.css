@@ -292,9 +292,8 @@ header h1 {
     padding: 8px 4px;
     text-align: center;
     border-bottom: 2px solid var(--border);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
 }
 
 .log-table th.col-fixed {
