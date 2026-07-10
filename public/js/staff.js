@@ -76,24 +76,24 @@ function updateState(store) {
     btn.classList.toggle('active', numberMode);
 
     if(!!countUpMode){
-        document.getElementById('stock-list-title').innerHTML = '個別販売数'
+        document.getElementById('stock-section-title').innerHTML = '個別販売数'
     } else {
-        document.getElementById('stock-list-title').innerHTML = '在庫残り'
+        document.getElementById('stock-section-title').innerHTML = '在庫残り'
     }
 
     // 在庫
     document.getElementById('stock-list').innerHTML = store.products.map(p => {
-        const isOver = p.overStock;
-        const showOver = isOver || p.stock <= 0;
-        const countClass = isOver ? ' over' : (p.stock <= 5 ? ' low' : '');
-        const countText = isOver ? '突破中+' + (p.overCount || 0) : p.stock;
+        const isOver = p.overStock; // 上限突破モード中かどうか
+        const showOver = isOver || p.stock <= 0; // 上限突破ボタンを表示するかどうか
+        const stockNumStyle = isOver ? ' over' : (p.stock <= 5 ? ' low' : ''); //
+        const stockNum = isOver ? '突破中+' + (p.overCount || 0) : p.stock;
         const overBtn = (p.stock <= 0 || isOver) ?
             '<button class="btn-overstock' + (isOver ? ' active' : '') + '" onclick="toggleOverStock(' + p.id + ')">' +
             (isOver ? '⚡ 突破モード中（解除）' : '⚡ 上限突破モード') + '</button>' : '';
         return '<div class="stock-item" style="flex-direction:column;align-items:stretch;gap:4px;">' +
             '<div style="display:flex;align-items:center;justify-content:space-between;">' +
             '<div><div class="stock-name">' + esc(p.name) + '</div><div class="stock-price">¥' + p.price + '</div></div>' +
-            '<div class="stock-count' + countClass + '">' + countText + '</div>' +
+            '<div class="stock-count' + stockNumStyle + '">' + stockNum + '</div>' +
             '</div>' + overBtn +
             '</div>';
     }).join('');

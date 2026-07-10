@@ -61,10 +61,7 @@ function updateState(store) {
     const hasBurst = isCountUpMode && (products || []).some(p => p.sold >= p.stock);
     const banner = document.getElementById('over-banner');
     if (banner) {
-        if (hasBurst) {
-            banner.textContent = '⚡ 現在予想売り上げ数を突破中！';
-            banner.style.display = 'block';
-        } else if (hasOver) {
+        if (hasOver) {
             banner.textContent = '⚡ 現在予定売り上げ数を突破！';
             banner.style.display = 'block';
         } else {
@@ -181,8 +178,8 @@ function renderProducts() {
 
         if (isCU) {
             // カウントアップモード: 売れた数/目標数を表示
-            els.stockEl.textContent = cuBurst ? ('目標達成+' + ((p.sold || 0) - p.stock) + '個') : ('販売中 ' + (p.sold || 0) + '/' + p.stock + '個');
-            els.stockEl.className = 'product-stock' + (cuBurst ? ' over-mode' : '');
+            //els.stockEl.textContent = cuBurst ? ('目標達成+' + ((p.sold || 0) - p.stock) + '個') : ('販売中 ' + (p.sold || 0) + '/' + p.stock + '個');
+            //els.stockEl.className = 'product-stock' + (cuBurst ? ' over-mode' : '');
         } else if (isOver) {
             els.stockEl.textContent = '⚡ 突破中';
             els.stockEl.className = 'product-stock over-mode';
