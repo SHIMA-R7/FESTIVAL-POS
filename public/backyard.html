@@ -34,12 +34,14 @@
         <div class="stat-value"><span id="sales-count">0</span><span class="stat-unit"> 件</span></div>
       </div>
       <div class="stock-section">
-        <h3>在庫状況</h3>
+        <h3 id="stock-section-title">在庫状況</h3>
         <div class="stock-list" id="stock-list"></div>
       </div>
       <!-- ⑤ モード表示のみ（切替ボタンなし） -->
       <div class="mode-indicator" id="mode-indicator">
-        <span class="mode-dot"></span>
+        <span id="cu-indicator" class="cu-indicator"></span>
+      </div>
+      <div class="mode-label-wrap" id="mode-label-wrap">
         <span id="mode-label">通常モード</span>
       </div>
     </div>
@@ -58,7 +60,7 @@
     </div>
   </div>
 
-  <script src="./js/backyard.js?v=202607101300"></script>
+  <script src="./js/backyard.js?v=202607101509"></script>
 </body>
 
 </html>

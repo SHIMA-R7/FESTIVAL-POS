@@ -169,38 +169,55 @@ header h1 {
 /* ⑤ モード表示（切替不可） */
 .mode-indicator {
     margin-top: auto;
-    background: var(--bg);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    padding: 6px 6px;
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    cursor: default;
-    user-select: none;
-}
-
-.mode-indicator.active {
-    background: #F5A62322;
-    border-color: var(--accent);
-    color: var(--accent);
 }
 
 .mode-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: var(--text-muted);
-    flex-shrink: 0;
 }
 
 .mode-indicator.active .mode-dot {
     background: var(--accent);
+}
+
+/* カウントアップ状態表示（シンプル） */
+.cu-indicator {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;
+    text-align: center;
+}
+.cu-indicator.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: rgba(0,0,0,0.06);
+}
+
+/* モードラベル（シンプル） */
+.mode-label-wrap {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mode-label-wrap #mode-label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+.mode-label-wrap.active #mode-label {
+    color: var(--primary);
 }
 
 /* ── 右パネル：ログのみ（⑤ 決済待ちエリアなし） ── */
